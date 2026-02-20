@@ -11,5 +11,8 @@ python manage.py migrate
 
 # Create superuser from env vars (only if it doesn't already exist)
 if [ -n "$DJANGO_SUPERUSER_EMAIL" ]; then
-    python manage.py createsuperuser --noinput 2>/dev/null || echo "Superuser already exists."
+    DJANGO_SUPERUSER_FIRST_NAME="${DJANGO_SUPERUSER_FIRST_NAME:-Admin}"
+    DJANGO_SUPERUSER_LAST_NAME="${DJANGO_SUPERUSER_LAST_NAME:-User}"
+    export DJANGO_SUPERUSER_FIRST_NAME DJANGO_SUPERUSER_LAST_NAME
+    python manage.py createsuperuser --noinput --email "$DJANGO_SUPERUSER_EMAIL" --first_name "$DJANGO_SUPERUSER_FIRST_NAME" --last_name "$DJANGO_SUPERUSER_LAST_NAME" 2>/dev/null || echo "Superuser already exists."
 fi
