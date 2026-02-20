@@ -1,0 +1,14 @@
+asgiref==3.11.1
+Django==6.0.2
+django-admin-interface==0.32.0
+django-ckeditor-5==0.2.19
+django-colorfield==0.14.0
+django-cors-headers==4.9.0
+djangorestframework==3.16.1
+djangorestframework_simplejwt==5.5.1
+pillow==12.1.1
+psycopg2-binary==2.9.11
+PyJWT==2.11.0
+python-slugify==8.0.4
+sqlparse==0.5.5
+text-unidecode==1.3
