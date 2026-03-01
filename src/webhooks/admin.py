@@ -1,15 +1,17 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from django.utils.safestring import mark_safe
+
+from unfold.admin import ModelAdmin
+from unfold.decorators import display
 
 from .models import WebhookLog
 
 
 @admin.register(WebhookLog)
-class WebhookLogAdmin(admin.ModelAdmin):
+class WebhookLogAdmin(ModelAdmin):
     """
     Read-only admin for viewing webhook logs.
-    Provides clear visual indicators for status and signature validation.
+    Uses Unfold labels for clear status indicators.
     """
 
     list_display = (
@@ -53,45 +55,43 @@ class WebhookLogAdmin(admin.ModelAdmin):
         return False
 
     def has_delete_permission(self, request, obj=None):
-        # Allow deletion for cleanup
         return True
 
     # ── Custom Columns ──
-    @admin.display(description='Order ID')
+    @display(description='Order ID')
     def order_id_display(self, obj):
-        return obj.order_id or mark_safe('<span style="color:#9CA3AF;">—</span>')
+        return obj.order_id or '—'
 
-    @admin.display(description='Status')
+    @display(
+        description='Status',
+        label={
+            'received': 'info',
+            'processing': 'warning',
+            'processed': 'success',
+            'failed': 'danger',
+            'invalid_sig': 'danger',
+        },
+    )
     def status_badge(self, obj):
-        colors = {
-            'received': ('#6B7280', '#F3F4F6'),
-            'processing': ('#1D4ED8', '#DBEAFE'),
-            'processed': ('#059669', '#D1FAE5'),
-            'failed': ('#DC2626', '#FEE2E2'),
-            'invalid_sig': ('#DC2626', '#FEE2E2'),
-        }
-        fg, bg = colors.get(obj.processing_status, ('#6B7280', '#F3F4F6'))
-        return format_html(
-            '<span style="background:{}; color:{}; padding:2px 8px; '
-            'border-radius:10px; font-size:11px; font-weight:600;">{}</span>',
-            bg, fg, obj.get_processing_status_display()
-        )
+        return obj.processing_status, obj.get_processing_status_display()
 
-    @admin.display(description='Signature')
+    @display(
+        description='Signature',
+        label={
+            True: 'success',
+            False: 'danger',
+        },
+    )
     def signature_badge(self, obj):
         if obj.signature_valid:
-            return mark_safe(
-                '<span style="color:#059669; font-weight:700;">✓ Valid</span>'
-            )
-        return mark_safe(
-            '<span style="color:#DC2626; font-weight:700;">✗ Invalid</span>'
-        )
+            return True, "✓ Valid"
+        return False, "✗ Invalid"
 
-    @admin.display(description='New User', boolean=True)
+    @display(description='New User', boolean=True)
     def user_created_badge(self, obj):
         return obj.user_created
 
-    @admin.display(description='Payload')
+    @display(description='Payload')
     def payload_pretty(self, obj):
         import json
         try:

@@ -40,6 +40,12 @@ class Book(models.Model):
         help_text='Order of appearance in the Library. Lower numbers appear first.'
     )
 
+    # ── Figma Part 3: Board Basics stats show "450 / 870 pages" ─────
+    estimated_pages = models.PositiveIntegerField(
+        default=0,
+        help_text='Total page count for progress display (e.g., "450 / 870 pages").'
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -65,6 +71,7 @@ class Specialty(models.Model):
     A medical specialty/section within a book.
     Example: Within "Pulmonary" book → "Asthma", "COPD", "Pneumonia", etc.
     Maps to the MKSAP Syllabus specialty structure.
+    Also used as the basis for CORE badges (11 specialties).
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -79,6 +86,16 @@ class Specialty(models.Model):
     )
     description = models.TextField(blank=True, help_text='Brief description of this specialty.')
     display_order = models.PositiveIntegerField(default=0)
+
+    # ── Figma Part 3: CORE module has 11 specialty badges ───────────
+    is_core_specialty = models.BooleanField(
+        default=False,
+        help_text='If True, this specialty appears in the CORE certification module with badge tracking.'
+    )
+    core_display_order = models.PositiveIntegerField(
+        default=0,
+        help_text='Order of appearance in the CORE badge list (1-11).'
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -122,6 +139,13 @@ class Topic(models.Model):
     is_board_basics = models.BooleanField(
         default=False,
         help_text='If checked, this topic also appears in the Board Basics section.'
+    )
+
+    # ── Figma Part 3: Learning Plan shows "0/3 tasks completed" ─────
+    # Tasks are sub-items within a topic (reading, quiz, flashcard review, etc.)
+    estimated_tasks = models.PositiveIntegerField(
+        default=0,
+        help_text='Number of tasks associated with this topic (for Learning Plan progress display).'
     )
 
     created_at = models.DateTimeField(auto_now_add=True)

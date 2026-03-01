@@ -7,11 +7,19 @@ from django_ckeditor_5.fields import CKEditor5Field
 class Flashcard(models.Model):
     """
     A flashcard with front (question/prompt) and back (answer).
-    Linked to a specialty and optionally to a specific topic.
+    Linked to a book, specialty, and optionally to a specific topic.
     Admin creates these via Django Admin.
+    Figma Part 3: Decks organized by book (215+ cards per deck).
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    # ── Figma Part 3: Decks are organized by book ───────────────────
+    book = models.ForeignKey(
+        'books.Book', on_delete=models.CASCADE, related_name='flashcards',
+        help_text='The book this flashcard belongs to (defines the deck).',
+        null=True, blank=True,
+    )
     specialty = models.ForeignKey(
         'books.Specialty', on_delete=models.CASCADE, related_name='flashcards',
         help_text='The specialty this flashcard belongs to.'
@@ -20,6 +28,13 @@ class Flashcard(models.Model):
         'books.Topic', on_delete=models.SET_NULL, null=True, blank=True,
         related_name='flashcards',
         help_text='Optional: specific topic this flashcard relates to.'
+    )
+
+    # ── Figma Part 3: "Related Text →" links answer to syllabus ────
+    related_topic = models.ForeignKey(
+        'books.Topic', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='related_flashcards',
+        help_text='Topic linked via "Related Text →" on the answer side.'
     )
 
     front_text = CKEditor5Field(
@@ -31,6 +46,12 @@ class Flashcard(models.Model):
         help_text='The answer/explanation side of the flashcard.'
     )
 
+    # ── Figma Part 3: "2/215 Flashcards" implies ordered deck ──────
+    display_order = models.PositiveIntegerField(
+        default=0,
+        help_text='Order within the deck. Determines position in "2/215 Flashcards" counter.'
+    )
+
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -38,7 +59,7 @@ class Flashcard(models.Model):
     class Meta:
         verbose_name = 'Flashcard'
         verbose_name_plural = 'Flashcards'
-        ordering = ['specialty__name', 'created_at']
+        ordering = ['book__title', 'display_order', 'created_at']
 
     def __str__(self):
         import re
@@ -49,12 +70,13 @@ class Flashcard(models.Model):
 class UserFlashcardProgress(models.Model):
     """
     Tracks a user's progress on each flashcard.
-    Implements spaced repetition with confidence ratings.
+    Figma Part 3 shows simple reveal/next pattern (no self-rating).
+    Keeping confidence field for future use but default flow is just viewed/not-viewed.
     """
 
     class Confidence(models.IntegerChoices):
         NOT_REVIEWED = 0, 'Not Reviewed'
-        NOT_CONFIDENT = 1, 'Not Confident'
+        VIEWED = 1, 'Viewed'
         SOMEWHAT = 2, 'Somewhat Confident'
         CONFIDENT = 3, 'Confident'
         VERY_CONFIDENT = 4, 'Very Confident'

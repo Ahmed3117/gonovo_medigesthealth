@@ -1,15 +1,16 @@
 from django.contrib import admin
-from django.utils.html import format_html
-from django.utils.safestring import mark_safe
+
+from unfold.admin import ModelAdmin
+from unfold.decorators import display
 
 from .models import Flashcard, UserFlashcardProgress, UserCustomFlashcard
 
 
 @admin.register(Flashcard)
-class FlashcardAdmin(admin.ModelAdmin):
+class FlashcardAdmin(ModelAdmin):
     """
     Admin for managing system flashcards.
-    Shows front preview, specialty, topic, and status.
+    Uses Unfold for premium styling.
     """
 
     list_display = (
@@ -35,23 +36,23 @@ class FlashcardAdmin(admin.ModelAdmin):
         }),
     )
 
-    @admin.display(description='Front (Preview)')
+    @display(description='Front (Preview)')
     def front_preview(self, obj):
         import re
         clean = re.sub(r'<[^>]+>', '', obj.front_text or '')
         return clean[:100] + '...' if len(clean) > 100 else clean
 
-    @admin.display(description='Specialty', ordering='specialty__name')
+    @display(description='Specialty', ordering='specialty__name')
     def specialty_name(self, obj):
         return obj.specialty.name
 
-    @admin.display(description='Topic')
+    @display(description='Topic')
     def topic_name(self, obj):
         return obj.topic.title if obj.topic else '—'
 
 
 @admin.register(UserFlashcardProgress)
-class UserFlashcardProgressAdmin(admin.ModelAdmin):
+class UserFlashcardProgressAdmin(ModelAdmin):
     """Read-only admin for viewing flashcard progress."""
 
     list_display = ('user_email', 'flashcard_preview', 'confidence_badge', 'times_reviewed', 'last_reviewed_at')
@@ -66,35 +67,40 @@ class UserFlashcardProgressAdmin(admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         return False
 
-    @admin.display(description='User')
+    @display(description='User')
     def user_email(self, obj):
         return obj.user.email
 
-    @admin.display(description='Flashcard')
+    @display(description='Flashcard')
     def flashcard_preview(self, obj):
         import re
         clean = re.sub(r'<[^>]+>', '', obj.flashcard.front_text or '')
         return clean[:60] + '...' if len(clean) > 60 else clean
 
-    @admin.display(description='Confidence')
+    @display(
+        description='Confidence',
+        label={
+            0: 'info',
+            1: 'danger',
+            2: 'warning',
+            3: 'success',
+            4: 'primary',
+        },
+    )
     def confidence_badge(self, obj):
-        colors = {
-            0: ('#6B7280', '#F3F4F6', 'Not Reviewed'),
-            1: ('#DC2626', '#FEE2E2', 'Not Confident'),
-            2: ('#D97706', '#FEF3C7', 'Somewhat'),
-            3: ('#059669', '#D1FAE5', 'Confident'),
-            4: ('#1D4ED8', '#DBEAFE', 'Very Confident'),
+        labels = {
+            0: 'Not Reviewed',
+            1: 'Not Confident',
+            2: 'Somewhat',
+            3: 'Confident',
+            4: 'Very Confident',
         }
-        fg, bg, label = colors.get(obj.confidence, ('#6B7280', '#F3F4F6', '—'))
-        return format_html(
-            '<span style="background:{}; color:{}; padding:2px 8px; '
-            'border-radius:10px; font-size:11px; font-weight:600;">{}</span>',
-            bg, fg, label
-        )
+        label = labels.get(obj.confidence, '—')
+        return obj.confidence, label
 
 
 @admin.register(UserCustomFlashcard)
-class UserCustomFlashcardAdmin(admin.ModelAdmin):
+class UserCustomFlashcardAdmin(ModelAdmin):
     """Read-only admin for viewing user-created flashcards."""
 
     list_display = ('user_email', 'front_preview', 'topic_name', 'created_at')
@@ -106,14 +112,14 @@ class UserCustomFlashcardAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         return False
 
-    @admin.display(description='User')
+    @display(description='User')
     def user_email(self, obj):
         return obj.user.email
 
-    @admin.display(description='Front')
+    @display(description='Front')
     def front_preview(self, obj):
         return obj.front_text[:80] + '...' if len(obj.front_text) > 80 else obj.front_text
 
-    @admin.display(description='Topic')
+    @display(description='Topic')
     def topic_name(self, obj):
         return obj.topic.title if obj.topic else '—'

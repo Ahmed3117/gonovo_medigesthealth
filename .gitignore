@@ -39,3 +39,9 @@ Thumbs.db
 
 # Byte-compiled
 *.pyc
+
+# PDFs and docs
+*.pdf
+
+# Postman
+*.postman_collection.json

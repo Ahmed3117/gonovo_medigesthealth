@@ -11,12 +11,27 @@ class Question(models.Model):
     - Question stem with optional image
     - 5 options (A–E) with one correct answer
     - Detailed explanation with educational objective
+    - Key point, references, and tagging (Figma Part 2)
     """
 
     class Difficulty(models.TextChoices):
         EASY = 'easy', 'Easy'
         MEDIUM = 'medium', 'Medium'
         HARD = 'hard', 'Hard'
+
+    # ── Figma Part 2: Question tagging system ───────────────────────
+    class CareType(models.TextChoices):
+        AMBULATORY = 'ambulatory', 'Ambulatory'
+        INPATIENT = 'inpatient', 'Inpatient'
+        EMERGENCY = 'emergency', 'Emergency'
+        ICU = 'icu', 'ICU / Critical Care'
+
+    class PatientDemographic(models.TextChoices):
+        ADULT = 'adult', 'Adult'
+        ELDERLY = 'elderly', 'Age ≥65 y'
+        YOUNG_ADULT = 'young_adult', 'Age 18-40 y'
+        PREGNANT = 'pregnant', 'Pregnant'
+        PEDIATRIC = 'pediatric', 'Pediatric'
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     specialty = models.ForeignKey(
@@ -67,6 +82,34 @@ class Question(models.Model):
         max_length=10, choices=Difficulty.choices, default=Difficulty.MEDIUM
     )
 
+    # ── Figma Part 2: Key Point section (separate from explanation) ─
+    key_point = models.TextField(
+        blank=True,
+        help_text='Standalone key takeaway shown in a separate "Key Point" card.'
+    )
+
+    # ── Figma Part 2: References with PMID links ───────────────────
+    references = models.JSONField(
+        default=list, blank=True,
+        help_text='List of reference objects. Example: [{"text": "Author et al.", "pmid": "12345678"}]'
+    )
+
+    # ── Figma Part 2: Lab values table ──────────────────────────────
+    lab_values = models.JSONField(
+        default=list, blank=True,
+        help_text='Lab values with abnormal flags. Example: [{"name": "Hemoglobin", "value": "8.2", "unit": "g/dL", "flag": "L", "ref_range": "12-16"}]'
+    )
+
+    # ── Figma Part 2: Question tags (care type, demographics) ──────
+    care_type = models.CharField(
+        max_length=20, choices=CareType.choices, blank=True,
+        help_text='Care setting tag (e.g., "Ambulatory", "Inpatient").'
+    )
+    patient_demographic = models.CharField(
+        max_length=20, choices=PatientDemographic.choices, blank=True,
+        help_text='Patient demographic tag (e.g., "Age ≥65 y").'
+    )
+
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -106,6 +149,14 @@ class UserQuestionAttempt(models.Model):
     is_saved = models.BooleanField(
         default=False, help_text='User bookmarked/saved this question.'
     )
+
+    # ── Figma Part 2: Link attempt to a quiz session ────────────────
+    quiz_session = models.ForeignKey(
+        'QuizSession', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='attempts',
+        help_text='The quiz session this attempt belongs to (if any).'
+    )
+
     attempted_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -122,18 +173,28 @@ class QuizSession(models.Model):
     """
     A quiz/test session created by a user.
     Groups multiple question attempts into a single quiz run.
-    Supports both custom quizzes and exam mode.
+    Supports practice, exam, LKA, and retry-incorrect modes (Figma Part 2).
     """
 
+    # ── Figma Part 2: 4 quiz templates, not just 2 ─────────────────
     class Mode(models.TextChoices):
         PRACTICE = 'practice', 'Practice'
         EXAM = 'exam', 'Exam Mode'
+        LKA_PRACTICE = 'lka', 'LKA Practice'
+        RETRY_INCORRECT = 'retry', 'Retry Incorrect'
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
         related_name='quiz_sessions'
     )
+
+    # ── Figma Part 2: Custom quizzes have user-given names ──────────
+    title = models.CharField(
+        max_length=255, blank=True,
+        help_text='User-given name for custom quizzes (e.g., "Cardio Review").'
+    )
+
     mode = models.CharField(
         max_length=10, choices=Mode.choices, default=Mode.PRACTICE
     )
@@ -146,6 +207,18 @@ class QuizSession(models.Model):
     total_time_seconds = models.PositiveIntegerField(default=0)
     is_completed = models.BooleanField(default=False)
 
+    # ── Figma Part 2: Timing options (untimed, 60s/q, 90s/q) ───────
+    time_limit_per_question = models.PositiveIntegerField(
+        null=True, blank=True,
+        help_text='Seconds per question (null = untimed). Figma options: 60s, 90s.'
+    )
+
+    # ── Figma Part 2: Show/hide explanations toggle ─────────────────
+    show_explanations = models.BooleanField(
+        default=True,
+        help_text='If False, answer & critique are hidden (exam simulation mode).'
+    )
+
     started_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(null=True, blank=True)
 
@@ -155,7 +228,8 @@ class QuizSession(models.Model):
         ordering = ['-started_at']
 
     def __str__(self):
-        return f'{self.user.email} — {self.mode} ({self.correct_count}/{self.total_questions})'
+        name = self.title or self.mode
+        return f'{self.user.email} — {name} ({self.correct_count}/{self.total_questions})'
 
     @property
     def score_percentage(self):

@@ -1,21 +1,28 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from django.utils.html import format_html
-from django.utils.safestring import mark_safe
+
+from unfold.admin import ModelAdmin
+from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
+from unfold.decorators import display
 
 from .models import User
 
 
 @admin.register(User)
-class UserAdmin(BaseUserAdmin):
+class UserAdmin(BaseUserAdmin, ModelAdmin):
     """
     Custom admin for MEDIGEST User model.
-    Provides a user-friendly interface for managing users and their access.
+    Styled with Unfold for a premium admin experience.
     """
+
+    # Unfold forms
+    form = UserChangeForm
+    add_form = UserCreationForm
+    change_password_form = AdminPasswordChangeForm
 
     # ── List View ──
     list_display = (
-        'email', 'full_name_display', 'role', 'purchased_books_display',
+        'display_header', 'role', 'purchased_books_display',
         'is_active', 'created_at_display',
     )
     list_filter = ('role', 'is_active', 'is_staff', 'theme', 'created_at')
@@ -55,21 +62,20 @@ class UserAdmin(BaseUserAdmin):
     )
 
     # ── Custom Columns ──
-    @admin.display(description='Name', ordering='first_name')
-    def full_name_display(self, obj):
-        name = obj.get_full_name()
-        return name if name else '—'
+    @display(header=True, description="User", ordering="first_name")
+    def display_header(self, obj):
+        name = obj.get_full_name() or obj.email
+        initials = ''
+        if obj.first_name and obj.last_name:
+            initials = f"{obj.first_name[0]}{obj.last_name[0]}".upper()
+        elif obj.email:
+            initials = obj.email[0].upper()
+        return name, obj.email, initials
 
-    @admin.display(description='Books')
+    @display(description='Books')
     def purchased_books_display(self, obj):
-        count = obj.purchased_books_count
-        if count > 0:
-            return format_html(
-                '<span style="color: #059669; font-weight: 600;">{}</span>',
-                count
-            )
-        return mark_safe('<span style="color: #9CA3AF;">0</span>')
+        return obj.purchased_books_count
 
-    @admin.display(description='Joined', ordering='created_at')
+    @display(description='Joined', ordering='created_at')
     def created_at_display(self, obj):
         return obj.created_at.strftime('%b %d, %Y')

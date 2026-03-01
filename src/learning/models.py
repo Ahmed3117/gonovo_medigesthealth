@@ -29,6 +29,12 @@ class UserTopicProgress(models.Model):
         default=0, help_text='Total cumulative reading time.'
     )
 
+    # ── Figma Part 3: Learning Plan shows "0/3 tasks completed" ─────
+    tasks_completed = models.PositiveIntegerField(
+        default=0,
+        help_text='Number of tasks completed for this topic (for Learning Plan progress).'
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -122,6 +128,124 @@ class UserNote(models.Model):
         return f'{self.user.email}: "{self.content[:50]}"'
 
 
+class UserBookmark(models.Model):
+    """
+    A page/section bookmark in the Syllabus reader.
+    Figma Part 1 (Screen 12) shows a dedicated Bookmarks page under Syllabus.
+    Users can bookmark specific pages/sections while reading.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='bookmarks'
+    )
+    topic = models.ForeignKey(
+        'books.Topic', on_delete=models.CASCADE, related_name='bookmarks'
+    )
+    section_anchor = models.CharField(
+        max_length=255, blank=True,
+        help_text='Section/anchor ID within the topic content.'
+    )
+    label = models.CharField(
+        max_length=500, blank=True,
+        help_text='Auto-generated or user-given label for the bookmark.'
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Bookmark'
+        verbose_name_plural = 'Bookmarks'
+        unique_together = ['user', 'topic', 'section_anchor']
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.user.email}: {self.topic.title} — {self.label or self.section_anchor}'
+
+
+class UserLearningPlanTopic(models.Model):
+    """
+    Tracks which topics a user has added to their personal Learning Plan.
+    Figma Part 3 (Screens 24-26): Users curate a list of topics to focus on.
+    Topics can be added/removed. Progress is tracked per topic.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='learning_plan_topics'
+    )
+    topic = models.ForeignKey(
+        'books.Topic', on_delete=models.CASCADE, related_name='learning_plan_entries'
+    )
+
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Learning Plan Topic'
+        verbose_name_plural = 'Learning Plan Topics'
+        unique_together = ['user', 'topic']
+        ordering = ['-added_at']
+
+    def __str__(self):
+        return f'{self.user.email} → {self.topic.title}'
+
+
+class UserStudySession(models.Model):
+    """
+    Records individual study sessions for time tracking.
+    Figma Part 3 (Board Basics & Flashcards) shows "12.5h this week" study time.
+    Each record represents a continuous study period.
+    """
+
+    class SessionType(models.TextChoices):
+        READING = 'reading', 'Syllabus Reading'
+        QUIZ = 'quiz', 'Question Bank / Quiz'
+        FLASHCARD = 'flashcard', 'Flashcard Review'
+        BOARD_BASICS = 'board_basics', 'Board Basics'
+        CORE = 'core', 'CORE Practice'
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='study_sessions'
+    )
+    session_type = models.CharField(
+        max_length=15, choices=SessionType.choices
+    )
+    duration_seconds = models.PositiveIntegerField(
+        default=0,
+        help_text='Duration of this study session in seconds.'
+    )
+
+    # Optional context: what was the user studying?
+    book = models.ForeignKey(
+        'books.Book', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='study_sessions'
+    )
+    specialty = models.ForeignKey(
+        'books.Specialty', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='study_sessions'
+    )
+    topic = models.ForeignKey(
+        'books.Topic', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='study_sessions'
+    )
+
+    started_at = models.DateTimeField()
+    ended_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Study Session'
+        verbose_name_plural = 'Study Sessions'
+        ordering = ['-started_at']
+
+    def __str__(self):
+        hours = self.duration_seconds / 3600
+        return f'{self.user.email} — {self.session_type} ({hours:.1f}h)'
+
+
 class RecentActivity(models.Model):
     """
     Tracks recent user activity for the Dashboard's "Recent Activity" section.
@@ -132,6 +256,9 @@ class RecentActivity(models.Model):
         READING = 'reading', 'Reading'
         QUIZ = 'quiz', 'Quiz'
         FLASHCARD = 'flashcard', 'Flashcard'
+        BOARD_BASICS = 'board_basics', 'Board Basics'
+        CORE = 'core', 'CORE'
+        LEARNING_PLAN = 'learning_plan', 'Learning Plan'
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(

@@ -1,7 +1,9 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from django.utils.safestring import mark_safe
 from django.db.models import Count
+
+from unfold.admin import ModelAdmin, TabularInline, StackedInline
+from unfold.decorators import display
 
 from .models import Book, Specialty, Topic, UserBookAccess
 
@@ -10,7 +12,7 @@ from .models import Book, Specialty, Topic, UserBookAccess
 # Inline Models
 # ─────────────────────────────────────────────
 
-class SpecialtyInline(admin.TabularInline):
+class SpecialtyInline(TabularInline):
     """Inline specialties within a Book admin page."""
     model = Specialty
     extra = 1
@@ -20,7 +22,7 @@ class SpecialtyInline(admin.TabularInline):
     show_change_link = True
 
 
-class TopicInline(admin.StackedInline):
+class TopicInline(StackedInline):
     """Inline topics within a Specialty admin page."""
     model = Topic
     extra = 0
@@ -36,18 +38,17 @@ class TopicInline(admin.StackedInline):
 # ─────────────────────────────────────────────
 
 @admin.register(Book)
-class BookAdmin(admin.ModelAdmin):
+class BookAdmin(ModelAdmin):
     """
     Admin for managing Books.
     Shows cover image, status badge, and counts of specialties/topics.
-    Includes inline Specialties.
     """
 
     list_display = (
-        'cover_thumbnail', 'title', 'product_id', 'price_display',
+        'display_header', 'product_id', 'price_display',
         'status_badge', 'specialties_count', 'topics_count', 'display_order',
     )
-    list_display_links = ('title',)
+    list_display_links = ('display_header',)
     list_filter = ('status',)
     list_editable = ('display_order',)
     search_fields = ('title', 'product_id')
@@ -71,52 +72,35 @@ class BookAdmin(admin.ModelAdmin):
     inlines = [SpecialtyInline]
 
     # ── Custom Columns ──
-    @admin.display(description='Cover')
-    def cover_thumbnail(self, obj):
-        if obj.cover_image:
-            return format_html(
-                '<img src="{}" style="width:40px; height:55px; object-fit:cover; '
-                'border-radius:4px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);" />',
-                obj.cover_image.url
-            )
-        return mark_safe(
-            '<div style="width:40px; height:55px; background:#E5E7EB; '
-            'border-radius:4px; display:flex; align-items:center; '
-            'justify-content:center; font-size:16px;">📚</div>'
+    @display(header=True, description="Book")
+    def display_header(self, obj):
+        return obj.title, f"Product: {obj.product_id}", None, (
+            {"path": obj.cover_image.url, "squared": True}
+            if obj.cover_image else None
         )
 
-    @admin.display(description='Price')
+    @display(description='Price')
     def price_display(self, obj):
-        return format_html('<strong>${}</strong>', obj.price)
+        return f"${obj.price}"
 
-    @admin.display(description='Status')
+    @display(
+        description='Status',
+        label={
+            'active': 'success',
+            'coming_soon': 'warning',
+            'archived': 'info',
+        },
+    )
     def status_badge(self, obj):
-        colors = {
-            'active': ('#059669', '#D1FAE5'),
-            'coming_soon': ('#D97706', '#FEF3C7'),
-            'archived': ('#6B7280', '#F3F4F6'),
-        }
-        fg, bg = colors.get(obj.status, ('#6B7280', '#F3F4F6'))
-        label = obj.get_status_display()
-        return format_html(
-            '<span style="background:{}; color:{}; padding:3px 10px; '
-            'border-radius:12px; font-size:11px; font-weight:600;">{}</span>',
-            bg, fg, label
-        )
+        return obj.status, obj.get_status_display()
 
-    @admin.display(description='Specialties')
+    @display(description='Specialties')
     def specialties_count(self, obj):
-        count = obj.specialty_count
-        return format_html(
-            '<span style="font-weight:600;">{}</span>', count
-        )
+        return obj.specialty_count
 
-    @admin.display(description='Topics')
+    @display(description='Topics')
     def topics_count(self, obj):
-        count = obj.topic_count
-        return format_html(
-            '<span style="font-weight:600;">{}</span>', count
-        )
+        return obj.topic_count
 
 
 # ─────────────────────────────────────────────
@@ -124,16 +108,13 @@ class BookAdmin(admin.ModelAdmin):
 # ─────────────────────────────────────────────
 
 @admin.register(Specialty)
-class SpecialtyAdmin(admin.ModelAdmin):
-    """
-    Admin for managing Specialties.
-    Includes inline Topics.
-    """
+class SpecialtyAdmin(ModelAdmin):
+    """Admin for managing Specialties. Includes inline Topics."""
 
     list_display = (
-        'name', 'book_title', 'topic_count_display', 'display_order',
+        'display_header', 'topic_count_display', 'display_order',
     )
-    list_display_links = ('name',)
+    list_display_links = ('display_header',)
     list_filter = ('book',)
     list_editable = ('display_order',)
     search_fields = ('name', 'book__title')
@@ -149,14 +130,13 @@ class SpecialtyAdmin(admin.ModelAdmin):
 
     inlines = [TopicInline]
 
-    @admin.display(description='Book', ordering='book__title')
-    def book_title(self, obj):
-        return obj.book.title
+    @display(header=True, description='Specialty', ordering='name')
+    def display_header(self, obj):
+        return obj.name, obj.book.title, None
 
-    @admin.display(description='Topics')
+    @display(description='Topics')
     def topic_count_display(self, obj):
-        count = obj.topic_count
-        return format_html('<strong>{}</strong>', count)
+        return obj.topic_count
 
 
 # ─────────────────────────────────────────────
@@ -164,17 +144,16 @@ class SpecialtyAdmin(admin.ModelAdmin):
 # ─────────────────────────────────────────────
 
 @admin.register(Topic)
-class TopicAdmin(admin.ModelAdmin):
+class TopicAdmin(ModelAdmin):
     """
     Admin for managing Topics — the main content pages.
     Uses CKEditor for rich HTML content editing.
     """
 
     list_display = (
-        'title', 'specialty_name', 'book_name',
-        'board_basics_badge', 'display_order', 'updated_at',
+        'display_header', 'board_basics_badge', 'display_order', 'updated_at',
     )
-    list_display_links = ('title',)
+    list_display_links = ('display_header',)
     list_filter = (
         'is_board_basics',
         'specialty__book',
@@ -205,22 +184,18 @@ class TopicAdmin(admin.ModelAdmin):
         }),
     )
 
-    @admin.display(description='Specialty', ordering='specialty__name')
-    def specialty_name(self, obj):
-        return obj.specialty.name
+    @display(header=True, description='Topic', ordering='title')
+    def display_header(self, obj):
+        return obj.title, f"{obj.specialty.book.title} → {obj.specialty.name}", None
 
-    @admin.display(description='Book', ordering='specialty__book__title')
-    def book_name(self, obj):
-        return obj.specialty.book.title
-
-    @admin.display(description='Board Basics')
+    @display(
+        description='Board Basics',
+        label={True: "info", False: ""},
+    )
     def board_basics_badge(self, obj):
         if obj.is_board_basics:
-            return mark_safe(
-                '<span style="background:#DBEAFE; color:#1D4ED8; padding:2px 8px; '
-                'border-radius:10px; font-size:11px; font-weight:600;">✓ BB</span>'
-            )
-        return mark_safe('<span style="color:#D1D5DB;">—</span>')
+            return True, "✓ Board Basics"
+        return False, "—"
 
 
 # ─────────────────────────────────────────────
@@ -228,14 +203,11 @@ class TopicAdmin(admin.ModelAdmin):
 # ─────────────────────────────────────────────
 
 @admin.register(UserBookAccess)
-class UserBookAccessAdmin(admin.ModelAdmin):
-    """
-    Admin for managing user book access.
-    Allows admins to manually grant/revoke book access.
-    """
+class UserBookAccessAdmin(ModelAdmin):
+    """Admin for managing user book access."""
 
     list_display = (
-        'user_email', 'book_title', 'source_badge', 'order_id', 'granted_at',
+        'display_header', 'source_badge', 'order_id', 'granted_at',
     )
     list_filter = ('source', 'book', 'granted_at')
     search_fields = ('user__email', 'user__first_name', 'user__last_name', 'book__title', 'order_id')
@@ -250,22 +222,16 @@ class UserBookAccessAdmin(admin.ModelAdmin):
         }),
     )
 
-    @admin.display(description='User', ordering='user__email')
-    def user_email(self, obj):
-        return obj.user.email
+    @display(header=True, description='Access')
+    def display_header(self, obj):
+        return obj.book.title, obj.user.email, None
 
-    @admin.display(description='Book', ordering='book__title')
-    def book_title(self, obj):
-        return obj.book.title
-
-    @admin.display(description='Source')
+    @display(
+        description='Source',
+        label={
+            'webhook': 'warning',
+            'manual': 'info',
+        },
+    )
     def source_badge(self, obj):
-        if obj.source == 'webhook':
-            return mark_safe(
-                '<span style="background:#FEF3C7; color:#D97706; padding:2px 8px; '
-                'border-radius:10px; font-size:11px; font-weight:600;">⚡ Webhook</span>'
-            )
-        return mark_safe(
-            '<span style="background:#E0E7FF; color:#4338CA; padding:2px 8px; '
-            'border-radius:10px; font-size:11px; font-weight:600;">👤 Manual</span>'
-        )
+        return obj.source, obj.get_source_display()

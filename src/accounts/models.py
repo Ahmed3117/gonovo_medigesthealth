@@ -74,6 +74,22 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     email_notifications = models.BooleanField(default=True)
 
+    # ── Gamification: Study Streak ──────────────────────────────────
+    # Figma Part 3 (Board Basics & Flashcards) shows "7 days" study streak.
+    # Streak increments each consecutive day the user studies.
+    current_study_streak = models.PositiveIntegerField(
+        default=0,
+        help_text='Current consecutive days of study activity.'
+    )
+    longest_study_streak = models.PositiveIntegerField(
+        default=0,
+        help_text='All-time longest study streak (for achievements/display).'
+    )
+    last_study_date = models.DateField(
+        null=True, blank=True,
+        help_text='Date of last study activity. Used to calculate streak continuity.'
+    )
+
     # Django auth fields
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
