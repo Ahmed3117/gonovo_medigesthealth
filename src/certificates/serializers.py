@@ -32,13 +32,14 @@ class CMEDashboardSerializer(serializers.Serializer):
 class COREProgressSerializer(serializers.ModelSerializer):
     specialty_name = serializers.CharField(source='specialty.name', read_only=True)
     specialty_icon = serializers.ImageField(source='specialty.icon', read_only=True)
+    specialty_slug = serializers.CharField(source='specialty.slug', read_only=True)
     progress_percentage = serializers.IntegerField(read_only=True)
     correct_percentage = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = UserCOREProgress
         fields = [
-            'id', 'specialty_name', 'specialty_icon',
+            'id', 'specialty_name', 'specialty_icon', 'specialty_slug',
             'badge_status', 'questions_answered', 'questions_correct',
             'progress_percentage', 'correct_percentage',
             'core_quiz_unlocked',

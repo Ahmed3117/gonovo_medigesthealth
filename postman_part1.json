@@ -1,0 +1,834 @@
+{
+	"info": {
+		"_postman_id": "ae674b63-8bcd-464a-92e9-aabe9760bff5",
+		"name": "part1",
+		"description": "Complete API collection for the MEDIGEST Health Platform.\n\nBase URL: http://localhost:8000/api/v1/\n\nAuthentication: JWT Bearer Token\n- Register or login to get tokens\n- Set {{access_token}} variable after login\n\nLast Updated: 2026-03-01",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "33824171",
+		"_collection_link": "https://test00-8087.postman.co/workspace/gonovo~fbae8f0e-18be-4625-9205-aa4b8cd540e3/collection/33824171-ae674b63-8bcd-464a-92e9-aabe9760bff5?action=share&source=collection_link&creator=33824171"
+	},
+	"item": [
+		{
+			"name": "1. Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"  var json = pm.response.json();",
+									"  pm.collectionVariables.set('access_token', json.access);",
+									"  pm.collectionVariables.set('refresh_token', json.refresh);",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"ahmedibra3117@gmail.com\",\n  \"password\": \"NewSecurePass456!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"  var json = pm.response.json();",
+									"  pm.collectionVariables.set('access_token', json.access);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/token/refresh/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"token",
+								"refresh",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Password Reset Request",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"ahmedibra3117@gmail.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/password/reset/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"password",
+								"reset",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Password Reset Confirm",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"otp\": \"490049\",\n  \"new_password\": \"NewSecurePass456!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/password/reset/confirm/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"password",
+								"reset",
+								"confirm",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Profile",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/me/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"me",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Profile",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "profile_picture",
+									"type": "file",
+									"src": "postman-cloud:///1f0e18b4-5bb1-4e40-ad75-927eb060e457"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/users/me/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"me",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Change Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"current_password\": \"NewSecurePass456!\",\n  \"new_password\": \"NewSecurePass456!\",\n  \"new_password_confirm\": \"NewSecurePass456!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/me/change-password/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"me",
+								"change-password",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "User registration, login, logout, password management"
+		},
+		{
+			"name": "2. Dashboard",
+			"item": [
+				{
+					"name": "Get Dashboard",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/dashboard/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"dashboard",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Main dashboard with stats, quick actions, and recent activity"
+		},
+		{
+			"name": "3. Syllabus & Books",
+			"item": [
+				{
+					"name": "My Books",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/syllabus/my-books/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"syllabus",
+								"my-books",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Store Books",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/syllabus/store/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"syllabus",
+								"store",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Book Detail",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/syllabus/books/{{book_slug}}/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"syllabus",
+								"books",
+								"{{book_slug}}",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Topic Detail",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/syllabus/topics/{{topic_slug}}/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"syllabus",
+								"topics",
+								"{{topic_slug}}",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Topic Progress",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reading_time_seconds\": 120,\n  \"last_read_section\": \"section-2\",\n  \"is_completed\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/syllabus/topics/{{topic_slug}}/progress/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"syllabus",
+								"topics",
+								"{{topic_slug}}",
+								"progress",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Bookmarks",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/syllabus/bookmarks/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"syllabus",
+								"bookmarks",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Bookmark",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"topic\": \"{{topic_id}}\",\n  \"section_anchor\": \"section-1\",\n  \"label\": \"Important section\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/syllabus/bookmarks/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"syllabus",
+								"bookmarks",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Bookmark",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/syllabus/bookmarks/{{bookmark_id}}/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"syllabus",
+								"bookmarks",
+								"{{bookmark_id}}",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Notes & Highlights",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/syllabus/notes-highlights/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"syllabus",
+								"notes-highlights",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Notes & Highlights by Topic",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/syllabus/notes-highlights/{{topic_id}}/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"syllabus",
+								"notes-highlights",
+								"{{topic_id}}",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Highlight",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"topic\": \"{{topic_id}}\",\n  \"highlighted_text\": \"Important medical concept\",\n  \"start_offset\": 100,\n  \"end_offset\": 130,\n  \"color\": \"yellow\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/syllabus/highlights/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"syllabus",
+								"highlights",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Highlight",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/syllabus/highlights/{{highlight_id}}/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"syllabus",
+								"highlights",
+								"{{highlight_id}}",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Note",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"topic\": \"{{topic_id}}\",\n  \"content\": \"Remember this for the exam\",\n  \"position_offset\": 150\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/syllabus/notes/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"syllabus",
+								"notes",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Note",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"Updated note content\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/syllabus/notes/{{note_id}}/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"syllabus",
+								"notes",
+								"{{note_id}}",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Note",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/syllabus/notes/{{note_id}}/delete/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"syllabus",
+								"notes",
+								"{{note_id}}",
+								"delete",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Book management, reading interface, bookmarks, highlights, notes"
+		},
+		{
+			"name": "6. Learning Plan",
+			"item": [
+				{
+					"name": "Get Learning Plan",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/learning-plan/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"learning-plan",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Available Topics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/learning-plan/available-topics/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"learning-plan",
+								"available-topics",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add Topic to Plan",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"topic\": \"{{topic_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/learning-plan/topics/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"learning-plan",
+								"topics",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Topic from Plan",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/learning-plan/topics/{{plan_entry_id}}/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"learning-plan",
+								"topics",
+								"{{plan_entry_id}}",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Personal learning plan management"
+		},
+		{
+			"name": "7. CORE",
+			"item": [
+				{
+					"name": "CORE Dashboard",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/core/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"core",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "CORE Specialty Detail",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/core/{{specialty_slug}}/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"core",
+								"{{specialty_slug}}",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "CORE badge progress and specialty details"
+		},
+		{
+			"name": "8. Board Basics",
+			"item": [
+				{
+					"name": "Board Basics List",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/board-basics/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"board-basics",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Board Basics topics grouped by specialty"
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{access_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refresh_token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

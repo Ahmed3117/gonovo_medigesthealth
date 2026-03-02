@@ -1,6 +1,9 @@
+import random
 import uuid
+from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
+from django.utils import timezone
 
 
 class UserManager(BaseUserManager):
@@ -38,6 +41,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     class Role(models.TextChoices):
         STUDENT = 'student', 'Student'
         ADMIN = 'admin', 'Admin'
+        DOCTOR = 'doctor', 'Doctor'
 
     class ThemePreference(models.TextChoices):
         LIGHT = 'light', 'Light'
@@ -121,3 +125,50 @@ class User(AbstractBaseUser, PermissionsMixin):
     @property
     def purchased_books_count(self):
         return self.book_access.count()
+
+
+class PasswordResetOTP(models.Model):
+    """
+    Stores a 6-digit OTP for password reset.
+    Each OTP expires after 10 minutes.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='password_reset_otps'
+    )
+    otp = models.CharField(max_length=6)
+    is_used = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+
+    class Meta:
+        verbose_name = 'Password Reset OTP'
+        verbose_name_plural = 'Password Reset OTPs'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'OTP for {self.user.email} — {"used" if self.is_used else "active"}'
+
+    @property
+    def is_expired(self):
+        return timezone.now() > self.expires_at
+
+    @property
+    def is_valid(self):
+        return not self.is_used and not self.is_expired
+
+    @classmethod
+    def generate_for_user(cls, user):
+        """Invalidate old OTPs and create a new 6-digit OTP."""
+        # Invalidate any existing unused OTPs
+        cls.objects.filter(user=user, is_used=False).update(is_used=True)
+
+        otp_code = f'{random.randint(0, 999999):06d}'
+        otp = cls.objects.create(
+            user=user,
+            otp=otp_code,
+            expires_at=timezone.now() + timezone.timedelta(minutes=10),
+        )
+        return otp

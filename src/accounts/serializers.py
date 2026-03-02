@@ -15,9 +15,8 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'email', 'first_name', 'last_name', 'profile_picture',
-            'role', 'theme', 'font_size', 'email_notifications',
-            'current_study_streak', 'longest_study_streak', 'last_study_date',
-            'purchased_books_count', 'created_at',
+            'role', 'current_study_streak', 'longest_study_streak', 
+            'last_study_date', 'purchased_books_count', 'created_at',
         ]
         read_only_fields = ['id', 'email', 'role', 'created_at']
 
@@ -65,19 +64,10 @@ class PasswordResetRequestSerializer(serializers.Serializer):
 
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
-    """Confirm password reset — uid, token, new password."""
+    """Confirm password reset — OTP + new password."""
 
-    uid = serializers.CharField()
-    token = serializers.CharField()
+    otp = serializers.CharField(max_length=6, min_length=6)
     new_password = serializers.CharField(validators=[validate_password])
-    new_password_confirm = serializers.CharField()
-
-    def validate(self, attrs):
-        if attrs['new_password'] != attrs['new_password_confirm']:
-            raise serializers.ValidationError(
-                {'new_password_confirm': 'Passwords do not match.'}
-            )
-        return attrs
 
 
 class ChangePasswordSerializer(serializers.Serializer):
@@ -106,4 +96,8 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'theme', 'font_size', 'email_notifications']
+        fields = ['first_name', 'last_name', 'profile_picture']
+
+    def to_representation(self, instance):
+        # Ensure the response after update matches the clean format
+        return UserSerializer(instance).data

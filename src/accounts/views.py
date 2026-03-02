@@ -86,7 +86,7 @@ class LogoutView(APIView):
 
 
 # ─────────────────────────────────────────────
-# 2.5  Password Reset Request
+# 2.5  Password Reset Request (OTP)
 # ─────────────────────────────────────────────
 class PasswordResetRequestView(APIView):
     """POST /api/v1/auth/password/reset/"""
@@ -100,22 +100,68 @@ class PasswordResetRequestView(APIView):
 
         try:
             user = User.objects.get(email=email)
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
-            token = default_token_generator.make_token(user)
-            # TODO: Send email with reset link containing uid/token
-            # For now, log the token (in production, send via email service)
-            print(f'[Password Reset] uid={uid} token={token}')
+
+            # Generate OTP
+            from accounts.models import PasswordResetOTP
+            otp_obj = PasswordResetOTP.generate_for_user(user)
+
+            # Send OTP email
+            from django.core.mail import send_mail
+            from django.utils.html import strip_tags
+
+            subject = 'MEDIGEST Health — Your Password Reset Code'
+            html_message = f'''
+            <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 40px 20px;">
+                <div style="background: #ffffff; border-radius: 12px; padding: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <h1 style="color: #1a1a2e; font-size: 24px; margin: 0;">MEDIGEST Health</h1>
+                        <p style="color: #6c757d; font-size: 14px; margin-top: 5px;">Password Reset Code</p>
+                    </div>
+                    <p style="color: #333; font-size: 16px; line-height: 1.6;">Hello <strong>{user.first_name or user.email}</strong>,</p>
+                    <p style="color: #555; font-size: 15px; line-height: 1.6;">
+                        Use the following code to reset your password:
+                    </p>
+                    <div style="text-align: center; margin: 35px 0;">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                    color: #ffffff; padding: 20px 40px;
+                                    border-radius: 12px; font-size: 36px; font-weight: 700;
+                                    letter-spacing: 8px; display: inline-block;">
+                            {otp_obj.otp}
+                        </div>
+                    </div>
+                    <p style="color: #888; font-size: 13px; line-height: 1.5; text-align: center;">
+                        This code expires in <strong>10 minutes</strong>.<br>
+                        If you didn't request this, you can safely ignore this email.
+                    </p>
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 25px 0;">
+                    <p style="color: #aaa; font-size: 12px; text-align: center;">
+                        &copy; 2026 MEDIGEST Health. All rights reserved.
+                    </p>
+                </div>
+            </div>
+            '''
+            plain_message = strip_tags(html_message)
+
+            send_mail(
+                subject=subject,
+                message=plain_message,
+                from_email=None,  # uses DEFAULT_FROM_EMAIL
+                recipient_list=[email],
+                html_message=html_message,
+                fail_silently=False,
+            )
+
         except User.DoesNotExist:
             pass  # Security: always return 200
 
         return Response(
-            {'detail': f'Password reset instructions sent to {email}'},
+            {'detail': f'Password reset code sent to {email}'},
             status=status.HTTP_200_OK,
         )
 
 
 # ─────────────────────────────────────────────
-# 2.6  Password Reset Confirm
+# 2.6  Password Reset Confirm (OTP)
 # ─────────────────────────────────────────────
 class PasswordResetConfirmView(APIView):
     """POST /api/v1/auth/password/reset/confirm/"""
@@ -126,24 +172,28 @@ class PasswordResetConfirmView(APIView):
         serializer = PasswordResetConfirmSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        try:
-            uid = force_str(urlsafe_base64_decode(serializer.validated_data['uid']))
-            user = User.objects.get(pk=uid)
-        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        otp_code = serializer.validated_data['otp']
+
+        from accounts.models import PasswordResetOTP
+        otp_obj = PasswordResetOTP.objects.filter(
+            otp=otp_code, is_used=False,
+        ).order_by('-created_at').first()
+
+        if not otp_obj or not otp_obj.is_valid:
             return Response(
-                {'detail': 'Invalid reset link.'},
+                {'detail': 'Invalid or expired OTP code.'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        token = serializer.validated_data['token']
-        if not default_token_generator.check_token(user, token):
-            return Response(
-                {'detail': 'Invalid or expired reset token.'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
+        # Set new password
+        user = otp_obj.user
         user.set_password(serializer.validated_data['new_password'])
         user.save()
+
+        # Mark OTP as used
+        otp_obj.is_used = True
+        otp_obj.save()
+
         return Response({'detail': 'Password has been reset successfully.'})
 
 
@@ -153,16 +203,18 @@ class PasswordResetConfirmView(APIView):
 class UserProfileView(generics.RetrieveUpdateAPIView):
     """
     GET  /api/v1/users/me/  — current user profile
-    PATCH /api/v1/users/me/ — update profile fields
+    PATCH /api/v1/users/me/ — update profile fields (supports profile_picture upload)
     """
 
     permission_classes = [permissions.IsAuthenticated]
+    from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_object(self):
         return self.request.user
 
     def get_serializer_class(self):
-        if self.request.method in ('PATCH', 'PUT'):
+        if self.request.method in ['PATCH', 'PUT']:
             return UserUpdateSerializer
         return UserSerializer
 
