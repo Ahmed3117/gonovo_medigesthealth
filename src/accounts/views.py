@@ -142,14 +142,21 @@ class PasswordResetRequestView(APIView):
             '''
             plain_message = strip_tags(html_message)
 
-            send_mail(
-                subject=subject,
-                message=plain_message,
-                from_email=None,  # uses DEFAULT_FROM_EMAIL
-                recipient_list=[email],
-                html_message=html_message,
-                fail_silently=False,
-            )
+            try:
+                send_mail(
+                    subject=subject,
+                    message=plain_message,
+                    from_email=None,  # uses DEFAULT_FROM_EMAIL
+                    recipient_list=[email],
+                    html_message=html_message,
+                    fail_silently=False,
+                )
+            except Exception as e:
+                # Return the error message to help debug in production
+                return Response(
+                    {'detail': f'Error sending email: {str(e)}'}, 
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
 
         except User.DoesNotExist:
             pass  # Security: always return 200
