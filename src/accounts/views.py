@@ -94,77 +94,83 @@ class PasswordResetRequestView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        serializer = PasswordResetRequestSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        email = serializer.validated_data['email']
-
         try:
-            user = User.objects.get(email=email)
-
-            # Generate OTP
-            from accounts.models import PasswordResetOTP
-            otp_obj = PasswordResetOTP.generate_for_user(user)
-
-            # Send OTP email
-            from django.core.mail import send_mail
-            from django.utils.html import strip_tags
-
-            subject = 'MEDIGEST Health — Your Password Reset Code'
-            html_message = f'''
-            <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 40px 20px;">
-                <div style="background: #ffffff; border-radius: 12px; padding: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
-                    <div style="text-align: center; margin-bottom: 30px;">
-                        <h1 style="color: #1a1a2e; font-size: 24px; margin: 0;">MEDIGEST Health</h1>
-                        <p style="color: #6c757d; font-size: 14px; margin-top: 5px;">Password Reset Code</p>
-                    </div>
-                    <p style="color: #333; font-size: 16px; line-height: 1.6;">Hello <strong>{user.first_name or user.email}</strong>,</p>
-                    <p style="color: #555; font-size: 15px; line-height: 1.6;">
-                        Use the following code to reset your password:
-                    </p>
-                    <div style="text-align: center; margin: 35px 0;">
-                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                                    color: #ffffff; padding: 20px 40px;
-                                    border-radius: 12px; font-size: 36px; font-weight: 700;
-                                    letter-spacing: 8px; display: inline-block;">
-                            {otp_obj.otp}
-                        </div>
-                    </div>
-                    <p style="color: #888; font-size: 13px; line-height: 1.5; text-align: center;">
-                        This code expires in <strong>10 minutes</strong>.<br>
-                        If you didn't request this, you can safely ignore this email.
-                    </p>
-                    <hr style="border: none; border-top: 1px solid #eee; margin: 25px 0;">
-                    <p style="color: #aaa; font-size: 12px; text-align: center;">
-                        &copy; 2026 MEDIGEST Health. All rights reserved.
-                    </p>
-                </div>
-            </div>
-            '''
-            plain_message = strip_tags(html_message)
+            serializer = PasswordResetRequestSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            email = serializer.validated_data['email']
 
             try:
-                send_mail(
-                    subject=subject,
-                    message=plain_message,
-                    from_email=None,  # uses DEFAULT_FROM_EMAIL
-                    recipient_list=[email],
-                    html_message=html_message,
-                    fail_silently=False,
-                )
-            except Exception as e:
-                # Return the error message to help debug in production
-                return Response(
-                    {'detail': f'Error sending email: {str(e)}'}, 
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                )
+                user = User.objects.get(email=email)
 
-        except User.DoesNotExist:
-            pass  # Security: always return 200
+                # Generate OTP
+                from accounts.models import PasswordResetOTP
+                otp_obj = PasswordResetOTP.generate_for_user(user)
 
-        return Response(
-            {'detail': f'Password reset code sent to {email}'},
-            status=status.HTTP_200_OK,
-        )
+                # Send OTP email
+                from django.core.mail import send_mail
+                from django.utils.html import strip_tags
+
+                subject = 'MEDIGEST Health — Your Password Reset Code'
+                html_message = f'''
+                <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 40px 20px;">
+                    <div style="background: #ffffff; border-radius: 12px; padding: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                        <div style="text-align: center; margin-bottom: 30px;">
+                            <h1 style="color: #1a1a2e; font-size: 24px; margin: 0;">MEDIGEST Health</h1>
+                            <p style="color: #6c757d; font-size: 14px; margin-top: 5px;">Password Reset Code</p>
+                        </div>
+                        <p style="color: #333; font-size: 16px; line-height: 1.6;">Hello <strong>{user.first_name or user.email}</strong>,</p>
+                        <p style="color: #555; font-size: 15px; line-height: 1.6;">
+                            Use the following code to reset your password:
+                        </p>
+                        <div style="text-align: center; margin: 35px 0;">
+                            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                        color: #ffffff; padding: 20px 40px;
+                                        border-radius: 12px; font-size: 36px; font-weight: 700;
+                                        letter-spacing: 8px; display: inline-block;">
+                                {otp_obj.otp}
+                            </div>
+                        </div>
+                        <p style="color: #888; font-size: 13px; line-height: 1.5; text-align: center;">
+                            This code expires in <strong>10 minutes</strong>.<br>
+                            If you didn't request this, you can safely ignore this email.
+                        </p>
+                        <hr style="border: none; border-top: 1px solid #eee; margin: 25px 0;">
+                        <p style="color: #aaa; font-size: 12px; text-align: center;">
+                            &copy; 2026 MEDIGEST Health. All rights reserved.
+                        </p>
+                    </div>
+                </div>
+                '''
+                plain_message = strip_tags(html_message)
+
+                try:
+                    send_mail(
+                        subject=subject,
+                        message=plain_message,
+                        from_email=None,  # uses DEFAULT_FROM_EMAIL
+                        recipient_list=[email],
+                        html_message=html_message,
+                        fail_silently=False,
+                    )
+                except Exception as e:
+                    # Return email error
+                    return Response({'error_type': 'EmailError', 'detail': str(e)}, status=400)
+
+            except User.DoesNotExist:
+                pass  # Security: always return 200
+
+            return Response(
+                {'detail': f'Password reset code sent to {email}'},
+                status=status.HTTP_200_OK,
+            )
+            
+        except Exception as e:
+            import traceback
+            return Response({
+                'error_type': 'GeneralError',
+                'detail': str(e),
+                'traceback': traceback.format_exc()
+            }, status=400)
 
 
 # ─────────────────────────────────────────────
