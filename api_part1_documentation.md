@@ -81,7 +81,8 @@ These endpoints handle user sessions, profile management, and password security.
     ```json
     {
       "otp": "123456",
-      "new_password": "NewSecurePass456!"
+      "new_password": "NewSecurePass456!",
+      "new_password_confirm": "NewSecurePass456!"
     }
     ```
 *   **Response (200 OK):**

@@ -163,7 +163,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"otp\": \"490049\",\n  \"new_password\": \"NewSecurePass456!\"\n}"
+							"raw": "{\n  \"otp\": \"490049\",\n  \"new_password\": \"NewSecurePass456!\",\n  \"new_password_confirm\": \"NewSecurePass456!\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/auth/password/reset/confirm/",

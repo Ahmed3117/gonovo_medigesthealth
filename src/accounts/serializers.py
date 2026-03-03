@@ -68,6 +68,12 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 
     otp = serializers.CharField(max_length=6, min_length=6)
     new_password = serializers.CharField(validators=[validate_password])
+    new_password_confirm = serializers.CharField()
+
+    def validate(self, attrs):
+        if attrs['new_password'] != attrs['new_password_confirm']:
+            raise serializers.ValidationError({"new_password_confirm": "Passwords do not match."})
+        return attrs
 
 
 class ChangePasswordSerializer(serializers.Serializer):
