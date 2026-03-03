@@ -48,6 +48,78 @@ def debug_migrate(request):
         }, status=500)
 
 
+@csrf_exempt
+def debug_reset_flow(request):
+    """Simulates the full password reset flow step by step without sending email."""
+    secret = request.GET.get('secret', '')
+    if secret != 'medigest_migrate_2026':
+        return JsonResponse({'error': 'Forbidden'}, status=403)
+
+    test_email = request.GET.get('email', 'ahmedibra3117@gmail.com')
+    steps = {}
+
+    # Step 1: Import User model
+    try:
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        steps['step1_import_user'] = 'OK'
+    except Exception as e:
+        steps['step1_import_user'] = f'FAIL: {e}'
+        return JsonResponse({'steps': steps})
+
+    # Step 2: Look up user
+    try:
+        user = User.objects.get(email=test_email)
+        steps['step2_find_user'] = f'OK: found user id={user.pk}'
+    except User.DoesNotExist:
+        steps['step2_find_user'] = f'FAIL: No user with email={test_email}'
+        return JsonResponse({'steps': steps})
+    except Exception as e:
+        steps['step2_find_user'] = f'FAIL: {e}'
+        return JsonResponse({'steps': steps})
+
+    # Step 3: Import PasswordResetOTP model
+    try:
+        from accounts.models import PasswordResetOTP
+        steps['step3_import_otp_model'] = 'OK'
+    except Exception as e:
+        steps['step3_import_otp_model'] = f'FAIL: {e}'
+        return JsonResponse({'steps': steps})
+
+    # Step 4: Generate OTP
+    try:
+        otp_obj = PasswordResetOTP.generate_for_user(user)
+        steps['step4_generate_otp'] = f'OK: otp={otp_obj.otp}, expires={otp_obj.expires_at}'
+    except Exception as e:
+        import traceback
+        steps['step4_generate_otp'] = f'FAIL: {e}\n{traceback.format_exc()}'
+        return JsonResponse({'steps': steps})
+
+    # Step 5: Test SMTP connection (without sending)
+    try:
+        from django.core.mail import get_connection
+        conn = get_connection()
+        conn.open()
+        conn.close()
+        steps['step5_smtp_connect'] = 'OK: SMTP connection succeeded'
+    except Exception as e:
+        import traceback
+        steps['step5_smtp_connect'] = f'FAIL: {e}\n{traceback.format_exc()}'
+
+    # Step 6: Check email settings
+    steps['step6_email_settings'] = {
+        'EMAIL_BACKEND': getattr(settings, 'EMAIL_BACKEND', 'NOT SET'),
+        'EMAIL_HOST': getattr(settings, 'EMAIL_HOST', 'NOT SET'),
+        'EMAIL_PORT': getattr(settings, 'EMAIL_PORT', 'NOT SET'),
+        'EMAIL_USE_TLS': getattr(settings, 'EMAIL_USE_TLS', 'NOT SET'),
+        'EMAIL_HOST_USER': getattr(settings, 'EMAIL_HOST_USER', 'NOT SET'),
+        'EMAIL_HOST_PASSWORD_SET': bool(getattr(settings, 'EMAIL_HOST_PASSWORD', '')),
+        'DEFAULT_FROM_EMAIL': getattr(settings, 'DEFAULT_FROM_EMAIL', 'NOT SET'),
+    }
+
+    return JsonResponse({'steps': steps, 'overall': 'Completed all checks'})
+
+
 urlpatterns = [
     path('admin/', admin.site.urls),
 
@@ -62,8 +134,9 @@ urlpatterns = [
     path('api/v1/', include('learning.urls')),
     path('api/v1/', include('certificates.urls')),
     path('api/v1/', include('webhooks.urls')),
-    # ── Temporary debug migration endpoint ──────────────
+    # ── Temporary debug endpoints ────────────────────────
     path('api/v1/debug/migrate/', debug_migrate),
+    path('api/v1/debug/reset-flow/', debug_reset_flow),
 ]
 
 # Serve media files in development
