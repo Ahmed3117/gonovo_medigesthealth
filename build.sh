@@ -8,7 +8,8 @@ pip install -r requirements.txt
 cd src
 python manage.py collectstatic --no-input
 python manage.py migrate
-python manage.py seed_data
+python manage.py showmigrations accounts
+python manage.py seed_data || echo "⚠️ seed_data failed (non-fatal) — skipping."
 
 # Create superuser from env vars (only if it doesn't already exist)
 if [ -n "$DJANGO_SUPERUSER_EMAIL" ]; then
