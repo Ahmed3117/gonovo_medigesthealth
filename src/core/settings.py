@@ -19,6 +19,11 @@ SECRET_KEY = os.environ.get(
 DEBUG = True
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
+# Automatic support for Render's hostname
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
 # Webhook signing secret (from Shopify Integration PDF)
 WEBHOOK_SIGNING_SECRET = os.environ.get(
     'WEBHOOK_SIGNING_SECRET',
