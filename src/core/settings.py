@@ -560,14 +560,28 @@ CKEDITOR_5_UPLOAD_FILE_TYPES = ['jpeg', 'jpg', 'png', 'gif', 'bmp', 'webp', 'svg
 
 # ─────────────────────────────────────────────
 # Email Configuration
+# Uses Resend (HTTPS API) on production — Render blocks outbound SMTP.
+# Falls back to Gmail SMTP locally.
 # ─────────────────────────────────────────────
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'platraincloud@gmail.com'
-EMAIL_HOST_PASSWORD = 'meczfpooichwkudl'
-DEFAULT_FROM_EMAIL = 'MEDIGEST Health <platraincloud@gmail.com>'
+RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
+
+if RESEND_API_KEY:
+    # Production: use Resend via django-anymail (works on Render free tier)
+    INSTALLED_APPS += ['anymail']
+    EMAIL_BACKEND = 'anymail.backends.resend.EmailBackend'
+    ANYMAIL = {
+        'RESEND_API_KEY': RESEND_API_KEY,
+    }
+    DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'MEDIGEST Health <noreply@medigesthealth.com>')
+else:
+    # Local development: use Gmail SMTP
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtp.gmail.com'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = 'platraincloud@gmail.com'
+    EMAIL_HOST_PASSWORD = 'meczfpooichwkudl'
+    DEFAULT_FROM_EMAIL = 'MEDIGEST Health <platraincloud@gmail.com>'
 
 # Frontend URL for password reset links
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
