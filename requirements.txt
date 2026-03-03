@@ -15,4 +15,3 @@ gunicorn==23.0.0
 dj-database-url==2.3.0
 whitenoise==6.9.0
 django-filter==25.1
-django-anymail[resend]==12.0

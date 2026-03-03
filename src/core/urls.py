@@ -1,124 +1,10 @@
 """
 MEDIGEST Health — URL Configuration
 """
-import sys
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
-
-@csrf_exempt
-def debug_migrate(request):
-    """Temporary: run pending migrations and show DB status. Remove after use."""
-    secret = request.GET.get('secret', '')
-    if secret != 'medigest_migrate_2026':
-        return JsonResponse({'error': 'Forbidden'}, status=403)
-    try:
-        from django.core.management import call_command
-        from io import StringIO
-        out = StringIO()
-        call_command('migrate', stdout=out, stderr=out)
-        migrate_output = out.getvalue()
-
-        out2 = StringIO()
-        call_command('showmigrations', 'accounts', stdout=out2)
-        show_output = out2.getvalue()
-
-        # Check if accounts_passwordresetotp table exists
-        from django.db import connection
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT tablename FROM pg_tables WHERE tablename='accounts_passwordresetotp';")
-            table_exists = cursor.fetchone() is not None
-
-        return JsonResponse({
-            'status': 'ok',
-            'migrate_output': migrate_output,
-            'accounts_migrations': show_output,
-            'passwordresetotp_table_exists': table_exists,
-            'python_version': sys.version,
-        })
-    except Exception as e:
-        import traceback
-        return JsonResponse({
-            'status': 'error',
-            'detail': str(e),
-            'traceback': traceback.format_exc()
-        }, status=500)
-
-
-@csrf_exempt
-def debug_reset_flow(request):
-    """Simulates the full password reset flow step by step without sending email."""
-    secret = request.GET.get('secret', '')
-    if secret != 'medigest_migrate_2026':
-        return JsonResponse({'error': 'Forbidden'}, status=403)
-
-    test_email = request.GET.get('email', 'ahmedibra3117@gmail.com')
-    steps = {}
-
-    # Step 1: Import User model
-    try:
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        steps['step1_import_user'] = 'OK'
-    except Exception as e:
-        steps['step1_import_user'] = f'FAIL: {e}'
-        return JsonResponse({'steps': steps})
-
-    # Step 2: Look up user
-    try:
-        user = User.objects.get(email=test_email)
-        steps['step2_find_user'] = f'OK: found user id={user.pk}'
-    except User.DoesNotExist:
-        steps['step2_find_user'] = f'FAIL: No user with email={test_email}'
-        return JsonResponse({'steps': steps})
-    except Exception as e:
-        steps['step2_find_user'] = f'FAIL: {e}'
-        return JsonResponse({'steps': steps})
-
-    # Step 3: Import PasswordResetOTP model
-    try:
-        from accounts.models import PasswordResetOTP
-        steps['step3_import_otp_model'] = 'OK'
-    except Exception as e:
-        steps['step3_import_otp_model'] = f'FAIL: {e}'
-        return JsonResponse({'steps': steps})
-
-    # Step 4: Generate OTP
-    try:
-        otp_obj = PasswordResetOTP.generate_for_user(user)
-        steps['step4_generate_otp'] = f'OK: otp={otp_obj.otp}, expires={otp_obj.expires_at}'
-    except Exception as e:
-        import traceback
-        steps['step4_generate_otp'] = f'FAIL: {e}\n{traceback.format_exc()}'
-        return JsonResponse({'steps': steps})
-
-    # Step 5: Test SMTP connection (without sending)
-    try:
-        from django.core.mail import get_connection
-        conn = get_connection()
-        conn.open()
-        conn.close()
-        steps['step5_smtp_connect'] = 'OK: SMTP connection succeeded'
-    except Exception as e:
-        import traceback
-        steps['step5_smtp_connect'] = f'FAIL: {e}\n{traceback.format_exc()}'
-
-    # Step 6: Check email settings
-    steps['step6_email_settings'] = {
-        'EMAIL_BACKEND': getattr(settings, 'EMAIL_BACKEND', 'NOT SET'),
-        'EMAIL_HOST': getattr(settings, 'EMAIL_HOST', 'NOT SET'),
-        'EMAIL_PORT': getattr(settings, 'EMAIL_PORT', 'NOT SET'),
-        'EMAIL_USE_TLS': getattr(settings, 'EMAIL_USE_TLS', 'NOT SET'),
-        'EMAIL_HOST_USER': getattr(settings, 'EMAIL_HOST_USER', 'NOT SET'),
-        'EMAIL_HOST_PASSWORD_SET': bool(getattr(settings, 'EMAIL_HOST_PASSWORD', '')),
-        'DEFAULT_FROM_EMAIL': getattr(settings, 'DEFAULT_FROM_EMAIL', 'NOT SET'),
-    }
-
-    return JsonResponse({'steps': steps, 'overall': 'Completed all checks'})
-
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -134,9 +20,6 @@ urlpatterns = [
     path('api/v1/', include('learning.urls')),
     path('api/v1/', include('certificates.urls')),
     path('api/v1/', include('webhooks.urls')),
-    # ── Temporary debug endpoints ────────────────────────
-    path('api/v1/debug/migrate/', debug_migrate),
-    path('api/v1/debug/reset-flow/', debug_reset_flow),
 ]
 
 # Serve media files in development
