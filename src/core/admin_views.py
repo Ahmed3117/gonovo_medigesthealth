@@ -93,6 +93,7 @@ class UploadFigmaDataView(View):
 
         import tempfile
         import os
+        import traceback
         from django.core.management import call_command
         
         # Save temp file
@@ -101,6 +102,19 @@ class UploadFigmaDataView(View):
             with os.fdopen(fd, 'wb') as f:
                 for chunk in uploaded_file.chunks():
                     f.write(chunk)
+            
+            # Validate JSON first
+            import json
+            with open(temp_path, 'r') as jf:
+                data = json.load(jf)
+            
+            # Check required fields
+            if 'user' not in data:
+                return HttpResponse("<h3>❌ Invalid JSON</h3><p>Missing 'user' key</p>", status=400)
+            if 'email' not in data['user']:
+                return HttpResponse("<h3>❌ Invalid JSON</h3><p>Missing 'email' in user data</p>", status=400)
+            if 'password' not in data['user']:
+                return HttpResponse("<h3>❌ Invalid JSON</h3><p>Missing 'password' in user data</p>", status=400)
             
             # Execute command
             buf = io.StringIO()
@@ -112,8 +126,18 @@ class UploadFigmaDataView(View):
                 f"<br><a href='/admin/'>Go to Admin Dashboard</a>"
             )
             
+        except json.JSONDecodeError as exc:
+            return HttpResponse(
+                f"<h3>❌ Invalid JSON file</h3><p>{exc}</p>",
+                status=400
+            )
         except Exception as exc:
-            return HttpResponse(f"<h3>❌ Import failed</h3><p>{exc}</p>", status=500)
+            tb = traceback.format_exc()
+            return HttpResponse(
+                f"<h3>❌ Import failed</h3><p>{exc}</p>"
+                f"<h4>Traceback:</h4><pre>{tb}</pre>",
+                status=500
+            )
             
         finally:
             if os.path.exists(temp_path):

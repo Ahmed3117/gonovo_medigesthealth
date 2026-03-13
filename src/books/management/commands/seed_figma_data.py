@@ -5,6 +5,7 @@ from datetime import timedelta
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from django.utils.text import slugify
+from django.db import transaction
 
 class Command(BaseCommand):
     help = "Seed database with Figma mockup dummy data directly from JSON."
@@ -32,14 +33,15 @@ class Command(BaseCommand):
         with open(json_path, 'r') as f:
             data = json.load(f)
 
-        student = self._create_student(data['user'])
-        self._create_books_and_specialties(data['books'])
-        self._create_questions()
-        self._create_flashcards()
-        self._grant_book_access(student)
-        self._create_cme(student)
-        self._create_student_activity(student)
-        self._create_webhook_logs(student)
+        # Wrap everything in a single transaction for speed on remote Postgres
+        with transaction.atomic():
+            student = self._create_student(data['user'])
+            self._create_books_and_specialties(data['books'])
+            self._create_questions()
+            self._create_flashcards()
+            self._grant_book_access(student)
+            self._create_cme(student)
+            self._create_student_activity(student)
 
         self.stdout.write(self.style.SUCCESS(
             f"\n✅ Figma demo data seeded successfully!\n"
@@ -129,26 +131,34 @@ class Command(BaseCommand):
         from books.models import Specialty
         from questions.models import Question
         specs = Specialty.objects.all()
-        for i, spec in enumerate(specs):
+        for spec in specs:
             if not spec.topics.exists():
                 continue
             topic = spec.topics.first()
+            existing = set(
+                Question.objects.filter(specialty=spec)
+                .values_list('question_text', flat=True)
+            )
+            new_questions = []
             for j in range(15):
-                q, created = Question.objects.get_or_create(
-                    specialty=spec,
-                    question_text=f"Question {j+1} for {spec.name}",
-                    defaults={
-                        "educational_objective": f"Objective {j}",
-                        "topic": topic,
-                        "option_a": "A",
-                        "option_b": "B",
-                        "option_c": "C",
-                        "option_d": "D",
-                        "correct_answer": "B",
-                        "difficulty": "medium",
-                        "explanation": f"Explanation for Q{j}",
-                    }
-                )
+                text = f"Question {j+1} for {spec.name}"
+                if text not in existing:
+                    new_questions.append(Question(
+                        specialty=spec,
+                        question_text=text,
+                        educational_objective=f"Objective {j}",
+                        topic=topic,
+                        option_a="A",
+                        option_b="B",
+                        option_c="C",
+                        option_d="D",
+                        correct_answer="B",
+                        difficulty="medium",
+                        explanation=f"Explanation for Q{j}",
+                    ))
+            if new_questions:
+                Question.objects.bulk_create(new_questions)
+                self.stdout.write(f"  ❓ Created {len(new_questions)} questions for {spec.name}")
 
     def _create_flashcards(self):
         from books.models import Specialty
@@ -157,17 +167,25 @@ class Command(BaseCommand):
         for spec in specs:
             if not spec.topics.exists():
                 continue
-            for i in range(155):
-                Flashcard.objects.get_or_create(
-                    front_text=f"Flashcard front {i+1} for {spec.name}",
-                    defaults={
-                        "specialty": spec,
-                        "book": spec.book,
-                        "topic": spec.topics.first(),
-                        "back_text": f"Flashcard back {i+1}",
-                        "display_order": i,
-                    }
-                )
+            existing = set(
+                Flashcard.objects.filter(specialty=spec)
+                .values_list('front_text', flat=True)
+            )
+            new_cards = []
+            for i in range(10):
+                front = f"Flashcard front {i+1} for {spec.name}"
+                if front not in existing:
+                    new_cards.append(Flashcard(
+                        specialty=spec,
+                        book=spec.book,
+                        topic=spec.topics.first(),
+                        front_text=front,
+                        back_text=f"Flashcard back {i+1}",
+                        display_order=i,
+                    ))
+            if new_cards:
+                Flashcard.objects.bulk_create(new_cards)
+                self.stdout.write(f"  🃏 Created {len(new_cards)} flashcards for {spec.name}")
 
     def _grant_book_access(self, student):
         from books.models import Book, UserBookAccess
@@ -186,7 +204,6 @@ class Command(BaseCommand):
         from books.models import Specialty
         from certificates.models import UserCOREProgress
         
-        # Hematology Badge 5 (45%)
         hematology = Specialty.objects.filter(name="Hematology").first()
         if hematology:
             UserCOREProgress.objects.get_or_create(
@@ -202,7 +219,6 @@ class Command(BaseCommand):
                 }
             )
         
-        # Infectious Disease Badge 6 (0%)
         infectious = Specialty.objects.filter(name="Infectious Disease").first()
         if infectious:
             UserCOREProgress.objects.get_or_create(
@@ -221,16 +237,11 @@ class Command(BaseCommand):
     def _create_student_activity(self, student):
         from books.models import Topic
         from learning.models import UserTopicProgress, UserStudySession
-        from questions.models import QuizSession, UserQuestionAttempt
-        from flashcards.models import Flashcard, UserFlashcardProgress
+        from questions.models import QuizSession, UserQuestionAttempt, Question
         
         now = timezone.now()
 
-        # Overwrite all stats to match Figma exactly
-        # "450 / 870 pages" - Already addressed roughly by page lengths and completed topics below.
-        
         topics = list(Topic.objects.all())
-        # Let's make the first topic completed up to page 45% (say, start_page=1, end_page=100 -> last_page_read=45)
         if topics:
             t = topics[0]
             t.title = "Evaluation of Lipid Levels"
@@ -258,7 +269,10 @@ class Command(BaseCommand):
                     }
                 )
 
-        # Quizzes: 85% average over last 10 quizzes
+        q_qs = list(Question.objects.all()[:10])
+        if not q_qs:
+            return
+
         for i in range(10):
             session, _ = QuizSession.objects.get_or_create(
                 user=student,
@@ -266,61 +280,68 @@ class Command(BaseCommand):
                 defaults={
                     "mode": "practice",
                     "total_questions": 10,
-                    "correct_count": 8 if i < 5 else 9,  # Approx 85%
+                    "correct_count": 8 if i < 5 else 9,
                     "total_time_seconds": 600,
                     "is_completed": True,
                     "completed_at": now - timedelta(days=i),
                 }
             )
-            q_qs = list(__import__("questions").models.Question.objects.all()[:10])
-            for q_idx in range(10):
-                UserQuestionAttempt.objects.get_or_create(
-                    user=student, question=q_qs[q_idx], quiz_session=session,
-                    defaults={
-                        "selected_answer": "B",
-                        "is_correct": q_idx < (8 if i < 5 else 9),
-                        "time_spent_seconds": 60,
-                        "attempted_at": now - timedelta(days=i),
-                    }
-                )
+            existing_attempts = set(
+                UserQuestionAttempt.objects.filter(user=student, quiz_session=session)
+                .values_list('question_id', flat=True)
+            )
+            new_attempts = []
+            for q_idx, q in enumerate(q_qs):
+                if q.id not in existing_attempts:
+                    new_attempts.append(UserQuestionAttempt(
+                        user=student,
+                        question=q,
+                        quiz_session=session,
+                        selected_answer="B",
+                        is_correct=q_idx < (8 if i < 5 else 9),
+                        time_spent_seconds=60,
+                        attempted_at=now - timedelta(days=i),
+                    ))
+            if new_attempts:
+                UserQuestionAttempt.objects.bulk_create(new_attempts)
 
-        # Study Time: 12.5h this week
         UserStudySession.objects.get_or_create(
             user=student,
             session_type="reading",
             started_at=now - timedelta(days=1),
             defaults={
-                "duration_seconds": int(12.5 * 3600), # 12.5 hours
+                "duration_seconds": int(12.5 * 3600),
                 "ended_at": now - timedelta(days=1) + timedelta(hours=12.5),
             }
         )
         
-        # Today's goals progress
-        # Practice questions: 15 / 20 done
-        q_qs = list(__import__("questions").models.Question.objects.all()[:15])
-        if q_qs:
-            daily_session, _ = QuizSession.objects.get_or_create(
-                user=student,
-                title="Today's Practice",
-                defaults={
-                    "mode": "practice",
-                    "total_questions": 15,
-                    "correct_count": 15,
-                    "total_time_seconds": 900,
-                    "is_completed": True,
-                    "completed_at": now,
-                }
-            )
-            for q in q_qs:
-                UserQuestionAttempt.objects.get_or_create(
-                    user=student, question=q, quiz_session=daily_session,
-                    defaults={
-                        "selected_answer": "B",
-                        "is_correct": True,
-                        "time_spent_seconds": 60,
-                        "attempted_at": now,
-                    }
-                )
-
-    def _create_webhook_logs(self, student):
-        pass # Not strictly necessary for Figma
+        daily_session, _ = QuizSession.objects.get_or_create(
+            user=student,
+            title="Today's Practice",
+            defaults={
+                "mode": "practice",
+                "total_questions": 15,
+                "correct_count": 15,
+                "total_time_seconds": 900,
+                "is_completed": True,
+                "completed_at": now,
+            }
+        )
+        existing_daily = set(
+            UserQuestionAttempt.objects.filter(user=student, quiz_session=daily_session)
+            .values_list('question_id', flat=True)
+        )
+        daily_attempts = []
+        for q in q_qs[:15]:
+            if q.id not in existing_daily:
+                daily_attempts.append(UserQuestionAttempt(
+                    user=student,
+                    question=q,
+                    quiz_session=daily_session,
+                    selected_answer="B",
+                    is_correct=True,
+                    time_spent_seconds=60,
+                    attempted_at=now,
+                ))
+        if daily_attempts:
+            UserQuestionAttempt.objects.bulk_create(daily_attempts)
