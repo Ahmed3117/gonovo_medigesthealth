@@ -1,0 +1,127 @@
+{
+  "user": {
+    "first_name": "Alex",
+    "last_name": "Sam",
+    "email": "alex@email.example",
+    "password": "StudentPassword123!",
+    "role": "student",
+    "current_study_streak": 7,
+    "longest_study_streak": 14,
+    "daily_reading_goal_minutes": 60,
+    "daily_flashcard_goal": 60,
+    "daily_questions_goal": 20,
+    "theme": "light",
+    "font_size": "medium"
+  },
+  "books": [
+    {
+      "title": "Internal Medicine Essentials",
+      "product_id": "MEDIGEST-IME-001",
+      "price": 49.99,
+      "status": "active",
+      "display_order": 1,
+      "estimated_pages": 400,
+      "description": "<p>Comprehensive resource for Internal Medicine clinical knowledge</p>",
+      "specialties": [
+        {
+          "name": "Hematology",
+          "is_core": true,
+          "core_order": 5,
+          "topics": [
+            {
+              "title": "Topic Name - Lesson Name",
+              "board_basics": true,
+              "content": "<h2>Lesson Name</h2><p>This is the content for the lesson.</p>",
+              "start_page": 1,
+              "end_page": 100
+            }
+          ]
+        },
+        {
+          "name": "Infectious Disease",
+          "is_core": true,
+          "core_order": 6,
+          "topics": [
+            {
+              "title": "Topic Name - Lesson Name",
+              "board_basics": true,
+              "content": "<h2>Lesson Name</h2><p>This is the content for the lesson.</p>",
+              "start_page": 101,
+              "end_page": 200
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Internal Medicine Essentials Vol 2",
+      "product_id": "MEDIGEST-IME-002",
+      "price": 49.99,
+      "status": "active",
+      "display_order": 2,
+      "estimated_pages": 250,
+      "description": "<p>Comprehensive resource for Internal Medicine clinical knowledge</p>",
+      "specialties": [
+        {
+          "name": "Cardiology",
+          "is_core": true,
+          "core_order": 1,
+          "topics": [
+            {
+              "title": "Topic Name - Lesson Name",
+              "board_basics": true,
+              "content": "<h2>Lesson Name</h2><p>This is the content for the lesson.</p>",
+              "start_page": 1,
+              "end_page": 100
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Internal Medicine Essentials Vol 3",
+      "product_id": "MEDIGEST-IME-003",
+      "price": 49.99,
+      "status": "active",
+      "display_order": 3,
+      "estimated_pages": 220,
+      "description": "<p>Comprehensive resource for Internal Medicine clinical knowledge</p>",
+      "specialties": [
+        {
+          "name": "Gastroenterology",
+          "is_core": true,
+          "core_order": 2,
+          "topics": [
+            {
+              "title": "Topic Name - Lesson Name",
+              "board_basics": true,
+              "content": "<h2>Lesson Name</h2><p>This is the content for the lesson.</p>",
+              "start_page": 1,
+              "end_page": 100
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Internal Medicine Essentials Store 1",
+      "product_id": "MEDIGEST-IME-004",
+      "price": 49.99,
+      "status": "active",
+      "display_order": 4,
+      "estimated_pages": 150,
+      "description": "<p>Store item 1</p>",
+      "specialties": []
+    },
+    {
+      "title": "Internal Medicine Essentials Store 2",
+      "product_id": "MEDIGEST-IME-005",
+      "price": 49.99,
+      "status": "active",
+      "display_order": 5,
+      "estimated_pages": 155,
+      "description": "<p>Store item 2</p>",
+      "specialties": []
+    }
+  ]
+}

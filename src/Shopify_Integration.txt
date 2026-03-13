@@ -1,0 +1,88 @@
+Shopify Integration
+
+First: Web App Access
+The web app will be accessible through a button on the ecommerce store
+(platform: shopify.com; domain: medigesthealth.com). The web app itself will be
+hosted on a subdomain (online.medigesthealth.com).
+
+Responsibility:
+I will create the button and create the hyperlink.
+
+Phase:
+Before Deployment to production
+
+Second: DNS Setup
+I will create the “A” (and MX, if needed) records. You will be responsible for
+supplying me with the IP address which we will point the subdomain to.
+
+Phase:
+Before Deployment to production
+
+Third: Shopify Integration
+Phase:
+Development
+
+A) Webhook (event-based, one-way)
+
+
+
+I already implemented a webhook through the Shopify dashboard to
+fire on a ‘purchase completed’ event.
+
+
+
+The webhook requests will be signed with:
+“8828edf31bf2349bde1141cc3e0d841b1560bebadd5bdab0adeb0bf214
+fc6094”
+
+
+
+The JSON schema is attached in the .json file. The schema has
+orderID, contact email, and productIds. (or whatever additional
+fields you want to use)
+
+
+
+When receiving a webhook, you will check if the user email exists in
+your database or not. If not, create a new user, add book access, send
+an email with logins (authentication mode determined by you).
+
+
+
+When the user purchases the book, they will be shown a message
+that the access details are sent to them by email.
+
+
+
+If the user already has an access, you will add the book, and send an
+email notifying them about the access.
+
+Responsibility:
+You will provide me with a URL endpoint to complete the webhook
+setup.
+
+B) Redeem Purchases (polling API)
+This one is more involved and is meant to be a fail-safe method to apply
+purchases (using the user’s email) in case the Shopify webhook fails to
+send.
+
+
+You will use a Shopify API’s endpoint to retrieve a list of the user’s
+purchases (productIds). Then you will update the user’s access based
+on the response.
+
+
+
+There should be a user facing page to restore access on the web app.
+It should probably set inside the user’s profile page. I will also link to
+it on the shopify website.
+
+
+
+There also should be a section in the admin dashboard to restore
+purchases.
+
+Responsibility:
+I will look into it
+
+

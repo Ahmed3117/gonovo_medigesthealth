@@ -15,7 +15,10 @@ class TopicMiniSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Topic
-        fields = ['id', 'title', 'slug', 'is_completed', 'progress_percentage']
+        fields = [
+            'id', 'title', 'slug', 'start_page', 'end_page',
+            'is_completed', 'progress_percentage',
+        ]
 
     def _get_progress(self, obj):
         user = self.context.get('request') and self.context['request'].user
@@ -53,8 +56,9 @@ class SpecialtySerializer(serializers.ModelSerializer):
     class Meta:
         model = Specialty
         fields = [
-            'id', 'name', 'slug', 'icon', 'progress_percentage',
-            'topic_count', 'topics',
+            'id', 'name', 'slug', 'icon',
+            'start_page', 'end_page',
+            'progress_percentage', 'topic_count', 'topics',
         ]
 
     def get_progress_percentage(self, obj):
@@ -82,8 +86,9 @@ class MyBookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = [
-            'id', 'title', 'slug', 'cover_image', 'last_topic_title',
-            'last_specialty_name', 'last_accessed', 'progress_percentage',
+            'id', 'title', 'slug', 'cover_image', 'has_pdf',
+            'last_topic_title', 'last_specialty_name',
+            'last_accessed', 'progress_percentage',
         ]
 
     def _last_progress(self, obj):
@@ -144,7 +149,8 @@ class BookDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = [
-            'id', 'title', 'slug', 'cover_image',
+            'id', 'title', 'slug', 'cover_image', 'has_pdf',
+            'total_pages', 'estimated_pages',
             'progress_percentage', 'specialties',
         ]
 
@@ -168,8 +174,8 @@ class BookmarkSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserBookmark
         fields = [
-            'id', 'topic', 'topic_title', 'section_anchor',
-            'label', 'created_at',
+            'id', 'topic', 'topic_title', 'page_number',
+            'section_anchor', 'label', 'created_at',
         ]
         read_only_fields = ['id', 'created_at']
         extra_kwargs = {
@@ -188,8 +194,8 @@ class HighlightSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserHighlight
         fields = [
-            'id', 'topic', 'highlighted_text', 'start_offset',
-            'end_offset', 'color', 'created_at',
+            'id', 'topic', 'highlighted_text', 'page_number',
+            'start_offset', 'end_offset', 'color', 'created_at',
         ]
         read_only_fields = ['id', 'created_at']
 
@@ -202,8 +208,8 @@ class NoteSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserNote
         fields = [
-            'id', 'topic', 'content', 'position_offset',
-            'highlight', 'created_at', 'updated_at',
+            'id', 'topic', 'content', 'page_number',
+            'position_offset', 'highlight', 'created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
@@ -228,6 +234,7 @@ class TopicDetailSerializer(serializers.ModelSerializer):
         model = Topic
         fields = [
             'id', 'title', 'slug', 'specialty', 'book',
+            'start_page', 'end_page',
             'content', 'key_points', 'is_completed', 'is_bookmarked',
             'progress', 'test_your_knowledge', 'pagination',
         ]
@@ -267,6 +274,7 @@ class TopicDetailSerializer(serializers.ModelSerializer):
         p = self._user_progress(obj)
         return {
             'last_read_section': p.last_read_section if p else '',
+            'last_page_read': p.last_page_read if p else 0,
             'reading_time_seconds': p.reading_time_seconds if p else 0,
             'tasks_completed': p.tasks_completed if p else 0,
             'estimated_tasks': obj.estimated_tasks,
@@ -315,4 +323,5 @@ class TopicDetailSerializer(serializers.ModelSerializer):
 class TopicProgressUpdateSerializer(serializers.Serializer):
     is_completed = serializers.BooleanField(required=False)
     last_read_section = serializers.CharField(required=False, allow_blank=True)
+    last_page_read = serializers.IntegerField(required=False, min_value=0)
     reading_time_seconds = serializers.IntegerField(required=False, min_value=0)

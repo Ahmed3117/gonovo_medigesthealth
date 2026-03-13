@@ -27,18 +27,29 @@ class QuestionAdmin(ModelAdmin):
 
     fieldsets = (
         ('Question', {
-            'fields': ('specialty', 'topic', 'question_text', 'question_image'),
+            'fields': ('book', 'specialty', 'topic', 'question_text', 'question_image'),
         }),
         ('Options', {
             'fields': ('option_a', 'option_b', 'option_c', 'option_d', 'option_e', 'correct_answer'),
             'description': 'Enter the text for each option. Mark the correct answer below.',
         }),
-        ('Explanation', {
-            'fields': ('explanation', 'educational_objective'),
+        ('Explanation & Key Point', {
+            'fields': ('explanation', 'educational_objective', 'key_point'),
             'classes': ('wide',),
         }),
-        ('Settings', {
-            'fields': ('difficulty', 'is_active'),
+        ('References & Lab Values', {
+            'fields': ('references', 'lab_values'),
+            'classes': ('collapse',),
+            'description': 'References: JSON list [{\"text\": \"...\", \"pmid\": \"...\"}]. '
+                           'Lab values: JSON list [{\"name\": \"...\", \"value\": \"...\", \"unit\": \"...\", \"flag\": \"...\", \"ref_range\": \"...\"}].',
+        }),
+        ('Cross-Module Links', {
+            'fields': ('related_topic',),
+            'classes': ('collapse',),
+            'description': 'Link to the \"Related Syllabus Content →\" topic shown in the critique section.',
+        }),
+        ('Tags & Settings', {
+            'fields': ('care_type', 'patient_demographic', 'difficulty', 'is_active'),
         }),
     )
 

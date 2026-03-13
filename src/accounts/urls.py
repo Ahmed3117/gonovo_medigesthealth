@@ -9,6 +9,7 @@ from .views import (
     PasswordResetConfirmView,
     UserProfileView,
     ChangePasswordView,
+    DeleteAccountView,
 )
 
 app_name = 'accounts'
@@ -25,4 +26,5 @@ urlpatterns = [
     # ── User Profile ───────────────────────────────────
     path('users/me/', UserProfileView.as_view(), name='user-profile'),
     path('users/me/change-password/', ChangePasswordView.as_view(), name='change-password'),
+    path('users/me/delete-account/', DeleteAccountView.as_view(), name='delete-account'),
 ]

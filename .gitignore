@@ -45,3 +45,6 @@ Thumbs.db
 
 # Postman
 *.postman_collection.json
+
+# Figma design images (binary assets, not for git)
+figma images/

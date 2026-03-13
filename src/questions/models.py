@@ -34,6 +34,13 @@ class Question(models.Model):
         PEDIATRIC = 'pediatric', 'Pediatric'
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    # ── Figma: Question Bank groups questions by book ────────────────
+    book = models.ForeignKey(
+        'books.Book', on_delete=models.CASCADE, related_name='questions',
+        null=True, blank=True,
+        help_text='The book this question belongs to (for Question Bank grouping).'
+    )
     specialty = models.ForeignKey(
         'books.Specialty', on_delete=models.CASCADE, related_name='questions',
         help_text='The specialty this question belongs to.'
@@ -42,6 +49,13 @@ class Question(models.Model):
         'books.Topic', on_delete=models.SET_NULL, null=True, blank=True,
         related_name='questions',
         help_text='Optional: specific topic this question relates to.'
+    )
+
+    # ── Figma Part 2: \"Related Syllabus Content →\" cross-link ───────
+    related_topic = models.ForeignKey(
+        'books.Topic', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='related_questions',
+        help_text='Topic linked via \"Related Syllabus Content →\" in the critique section.'
     )
 
     # Question content

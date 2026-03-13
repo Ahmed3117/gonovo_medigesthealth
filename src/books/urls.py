@@ -4,6 +4,7 @@ from .views import (
     MyBooksView,
     StoreBooksView,
     BookDetailView,
+    BookPDFView,
     BookmarkListCreateView,
     BookmarkDeleteView,
     NotesHighlightsListView,
@@ -24,6 +25,7 @@ urlpatterns = [
     path('syllabus/my-books/', MyBooksView.as_view(), name='my-books'),
     path('syllabus/store/', StoreBooksView.as_view(), name='store'),
     path('syllabus/books/<slug:book_slug>/', BookDetailView.as_view(), name='book-detail'),
+    path('syllabus/books/<slug:book_slug>/pdf/', BookPDFView.as_view(), name='book-pdf'),
 
     # ── Bookmarks ───────────────────────────────────────
     path('syllabus/bookmarks/', BookmarkListCreateView.as_view(), name='bookmark-list-create'),

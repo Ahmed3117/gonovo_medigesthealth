@@ -1,4 +1,7 @@
+import os
+
 from django.db.models import Count
+from django.http import FileResponse
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -29,18 +32,36 @@ def _build_stats(user):
     from django.utils import timezone
     from datetime import timedelta
 
-    # Overall progress: completed topics / total topics across owned books
+    # Overall progress: pages read / total pages across owned books
     owned_book_ids = UserBookAccess.objects.filter(
         user=user
     ).values_list('book_id', flat=True)
-    total_topics = Topic.objects.filter(
-        specialty__book_id__in=owned_book_ids
-    ).count()
-    completed_topics = UserTopicProgress.objects.filter(
+
+    owned_books = Book.objects.filter(id__in=owned_book_ids)
+    total_pages = sum(b.total_pages for b in owned_books)
+
+    # Pages read = sum of page ranges of completed topics
+    completed_progress = UserTopicProgress.objects.filter(
         user=user, topic__specialty__book_id__in=owned_book_ids,
         is_completed=True,
-    ).count()
-    progress_pct = round((completed_topics / total_topics) * 100) if total_topics else 0
+    ).select_related('topic')
+    pages_read = sum(
+        (p.topic.end_page - p.topic.start_page + 1)
+        for p in completed_progress
+        if p.topic.end_page and p.topic.start_page
+    )
+
+    if total_pages > 0:
+        progress_pct = min(round((pages_read / total_pages) * 100), 100)
+        detail = f'{pages_read} / {total_pages} pages'
+    else:
+        # Fallback to topic-based if no page data yet
+        total_topics = Topic.objects.filter(
+            specialty__book_id__in=owned_book_ids
+        ).count()
+        completed_topics = completed_progress.count()
+        progress_pct = round((completed_topics / total_topics) * 100) if total_topics else 0
+        detail = f'{completed_topics} / {total_topics} topics'
 
     # Quiz average: last 10 quiz sessions
     recent_sessions = QuizSession.objects.filter(
@@ -70,7 +91,7 @@ def _build_stats(user):
     return {
         'overall_progress': {
             'percentage': progress_pct,
-            'detail': f'{completed_topics} / {total_topics} topics',
+            'detail': detail,
         },
         'bank_average_score': {
             'percentage': quiz_avg,
@@ -137,6 +158,66 @@ class BookDetailView(generics.RetrieveAPIView):
 
     def get_queryset(self):
         return Book.objects.prefetch_related('specialties__topics')
+
+
+# ═════════════════════════════════════════════
+# 4.3b  Secure PDF Serving
+# ═════════════════════════════════════════════
+class BookPDFView(APIView):
+    """
+    GET /api/v1/syllabus/books/{book_slug}/pdf/
+
+    Streams the book PDF through an authenticated endpoint.
+    The user must own the book (have UserBookAccess) to access the PDF.
+    This prevents exposing the raw file URL to the frontend.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, book_slug):
+        book = Book.objects.filter(slug=book_slug).first()
+        if not book:
+            return Response(
+                {'detail': 'Book not found.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Verify the user owns this book
+        has_access = UserBookAccess.objects.filter(
+            user=request.user, book=book,
+        ).exists()
+        if not has_access:
+            return Response(
+                {'detail': 'You do not have access to this book.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Verify a PDF file exists
+        if not book.pdf_file:
+            return Response(
+                {'detail': 'No PDF file available for this book.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Stream the file
+        file_path = book.pdf_file.path
+        if not os.path.exists(file_path):
+            return Response(
+                {'detail': 'PDF file not found on server.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        response = FileResponse(
+            open(file_path, 'rb'),
+            content_type='application/pdf',
+        )
+        # Inline display (not download), with the book title as filename
+        safe_title = book.slug or 'book'
+        response['Content-Disposition'] = f'inline; filename="{safe_title}.pdf"'
+        # Prevent caching for content protection
+        response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response['Pragma'] = 'no-cache'
+        return response
 
 
 # ═════════════════════════════════════════════
@@ -337,6 +418,8 @@ class TopicProgressUpdateView(APIView):
             progress.is_completed = data['is_completed']
         if 'last_read_section' in data:
             progress.last_read_section = data['last_read_section']
+        if 'last_page_read' in data:
+            progress.last_page_read = data['last_page_read']
         if 'reading_time_seconds' in data:
             progress.reading_time_seconds += data['reading_time_seconds']
         progress.save()
@@ -344,6 +427,7 @@ class TopicProgressUpdateView(APIView):
         return Response({
             'is_completed': progress.is_completed,
             'last_read_section': progress.last_read_section,
+            'last_page_read': progress.last_page_read,
             'reading_time_seconds': progress.reading_time_seconds,
             'tasks_completed': progress.tasks_completed,
             'estimated_tasks': topic.estimated_tasks,

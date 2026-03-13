@@ -77,6 +77,32 @@ class User(AbstractBaseUser, PermissionsMixin):
         default=FontSize.MEDIUM,
     )
     email_notifications = models.BooleanField(default=True)
+    push_notifications = models.BooleanField(
+        default=True,
+        help_text='Enable/disable push notifications (Settings > Profile tab).'
+    )
+    weekly_reports = models.BooleanField(
+        default=True,
+        help_text='Enable/disable weekly progress report emails (Settings > Profile tab).'
+    )
+    study_reminders = models.BooleanField(
+        default=True,
+        help_text='Enable/disable study reminder notifications (Settings > Profile tab).'
+    )
+
+    # ── Learning Preferences (Settings > Preferences tab) ────────────
+    daily_reading_goal_minutes = models.PositiveIntegerField(
+        default=60,
+        help_text='Daily reading time goal in minutes (default: 60).'
+    )
+    daily_flashcard_goal = models.PositiveIntegerField(
+        default=60,
+        help_text='Daily flashcard review goal count (default: 60).'
+    )
+    daily_questions_goal = models.PositiveIntegerField(
+        default=20,
+        help_text='Daily practice questions goal count (default: 20).'
+    )
 
     # ── Gamification: Study Streak ──────────────────────────────────
     # Figma Part 3 (Board Basics & Flashcards) shows "7 days" study streak.

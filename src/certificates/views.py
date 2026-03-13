@@ -74,6 +74,31 @@ class CORESpecialtyDetailView(APIView):
             user=request.user, specialty=spec,
         )
 
+        # Recently answered questions for this specialty (Figma §4.7.2)
+        from questions.models import UserQuestionAttempt
+        recent_attempts = UserQuestionAttempt.objects.filter(
+            user=request.user,
+            question__specialty=spec,
+        ).select_related('question', 'question__specialty').order_by(
+            '-attempted_at'
+        )[:10]
+
+        recently_answered = [
+            {
+                'id': str(a.question.id),
+                'educational_objective': a.question.educational_objective,
+                'is_correct': a.is_correct,
+                'is_saved': a.is_saved,
+                'tags': {
+                    'specialty': spec.name,
+                    'care_type': a.question.get_care_type_display() if a.question.care_type else None,
+                    'patient_demographic': a.question.get_patient_demographic_display() if a.question.patient_demographic else None,
+                },
+                'attempted_at': a.attempted_at,
+            }
+            for a in recent_attempts
+        ]
+
         return Response({
             'specialty': {
                 'id': str(spec.id),
@@ -88,6 +113,7 @@ class CORESpecialtyDetailView(APIView):
             'core_quiz_unlocked': progress.core_quiz_unlocked,
             'progress_percentage': progress.progress_percentage,
             'correct_percentage': progress.correct_percentage,
+            'recently_answered': recently_answered,
         })
 
 

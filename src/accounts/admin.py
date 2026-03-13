@@ -39,8 +39,30 @@ class UserAdmin(BaseUserAdmin, ModelAdmin):
         ('Personal Info', {
             'fields': ('first_name', 'last_name', 'profile_picture'),
         }),
-        ('Role & Preferences', {
-            'fields': ('role', 'theme', 'font_size', 'email_notifications'),
+        ('Role & Display Preferences', {
+            'fields': ('role', 'theme', 'font_size'),
+            'classes': ('collapse',),
+        }),
+        ('Notification Preferences', {
+            'fields': (
+                'email_notifications', 'push_notifications',
+                'weekly_reports', 'study_reminders',
+            ),
+            'classes': ('collapse',),
+            'description': 'Figma Settings > Profile tab notification toggles.',
+        }),
+        ('Learning Goals', {
+            'fields': (
+                'daily_reading_goal_minutes', 'daily_flashcard_goal',
+                'daily_questions_goal',
+            ),
+            'classes': ('collapse',),
+            'description': 'Figma Settings > Preferences tab daily goals.',
+        }),
+        ('Study Streak', {
+            'fields': (
+                'current_study_streak', 'longest_study_streak', 'last_study_date',
+            ),
             'classes': ('collapse',),
         }),
         ('Permissions', {

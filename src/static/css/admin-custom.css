@@ -1,0 +1,17 @@
+/* ── MEDIGEST Admin – Custom Overrides ──────────────────────── */
+
+/* Increase sidebar logo size (default is ~32px height) */
+.sidebar-logo img,
+[class*="sidebar"] img[src*="logo"],
+aside img,
+nav img {
+    max-height: 64px !important;
+    height: 64px !important;
+    width: auto !important;
+    object-fit: contain;
+}
+
+/* Also target the Unfold-specific logo wrapper */
+.lg\:max-h-8 {
+    max-height: 4rem !important;   /* 64px instead of 32px */
+}

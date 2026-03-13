@@ -15,7 +15,15 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'email', 'first_name', 'last_name', 'profile_picture',
-            'role', 'current_study_streak', 'longest_study_streak', 
+            'role', 'theme', 'font_size',
+            # Notification preferences
+            'email_notifications', 'push_notifications',
+            'weekly_reports', 'study_reminders',
+            # Learning goals
+            'daily_reading_goal_minutes', 'daily_flashcard_goal',
+            'daily_questions_goal',
+            # Gamification
+            'current_study_streak', 'longest_study_streak',
             'last_study_date', 'purchased_books_count', 'created_at',
         ]
         read_only_fields = ['id', 'email', 'role', 'created_at']
@@ -102,7 +110,16 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'profile_picture']
+        fields = [
+            'first_name', 'last_name', 'email', 'profile_picture',
+            'theme', 'font_size',
+            # Notification preferences
+            'email_notifications', 'push_notifications',
+            'weekly_reports', 'study_reminders',
+            # Learning goals
+            'daily_reading_goal_minutes', 'daily_flashcard_goal',
+            'daily_questions_goal',
+        ]
 
     def to_representation(self, instance):
         # Ensure the response after update matches the clean format

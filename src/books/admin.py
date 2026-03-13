@@ -16,7 +16,7 @@ class SpecialtyInline(TabularInline):
     """Inline specialties within a Book admin page."""
     model = Specialty
     extra = 1
-    fields = ('name', 'slug', 'icon', 'display_order')
+    fields = ('name', 'slug', 'icon', 'display_order', 'start_page', 'end_page')
     prepopulated_fields = {'slug': ('name',)}
     ordering = ('display_order',)
     show_change_link = True
@@ -26,7 +26,12 @@ class TopicInline(StackedInline):
     """Inline topics within a Specialty admin page."""
     model = Topic
     extra = 0
-    fields = ('title', 'slug', 'display_order', 'is_board_basics', 'key_points', 'content')
+    fields = (
+        'title', 'slug', 'display_order',
+        'start_page', 'end_page',
+        'is_board_basics', 'estimated_tasks',
+        'key_points', 'content',
+    )
     prepopulated_fields = {'slug': ('title',)}
     ordering = ('display_order',)
     show_change_link = True
@@ -41,12 +46,12 @@ class TopicInline(StackedInline):
 class BookAdmin(ModelAdmin):
     """
     Admin for managing Books.
-    Shows cover image, status badge, and counts of specialties/topics.
+    Shows cover image, PDF status, price, and counts of specialties/topics.
     """
 
     list_display = (
         'display_header', 'product_id', 'price_display',
-        'status_badge', 'specialties_count', 'topics_count', 'display_order',
+        'status_badge', 'pdf_badge', 'specialties_count', 'topics_count', 'display_order',
     )
     list_display_links = ('display_header',)
     list_filter = ('status',)
@@ -59,6 +64,11 @@ class BookAdmin(ModelAdmin):
     fieldsets = (
         (None, {
             'fields': ('title', 'slug', 'product_id', 'cover_image'),
+        }),
+        ('PDF Content', {
+            'fields': ('pdf_file', 'total_pages', 'estimated_pages'),
+            'description': 'Upload the full book PDF. Set total pages for validation. '
+                           'Estimated pages is used for progress display.',
         }),
         ('Pricing & Status', {
             'fields': ('price', 'status', 'display_order'),
@@ -94,6 +104,12 @@ class BookAdmin(ModelAdmin):
     def status_badge(self, obj):
         return obj.status, obj.get_status_display()
 
+    @display(description='PDF')
+    def pdf_badge(self, obj):
+        if obj.has_pdf:
+            return f"✓ {obj.total_pages}pp"
+        return "—"
+
     @display(description='Specialties')
     def specialties_count(self, obj):
         return obj.specialty_count
@@ -109,13 +125,14 @@ class BookAdmin(ModelAdmin):
 
 @admin.register(Specialty)
 class SpecialtyAdmin(ModelAdmin):
-    """Admin for managing Specialties. Includes inline Topics."""
+    """Admin for managing Specialties. Includes inline Topics and page ranges."""
 
     list_display = (
-        'display_header', 'topic_count_display', 'display_order',
+        'display_header', 'page_range_display', 'topic_count_display',
+        'core_badge', 'display_order',
     )
     list_display_links = ('display_header',)
-    list_filter = ('book',)
+    list_filter = ('book', 'is_core_specialty')
     list_editable = ('display_order',)
     search_fields = ('name', 'book__title')
     prepopulated_fields = {'slug': ('name',)}
@@ -126,6 +143,16 @@ class SpecialtyAdmin(ModelAdmin):
         (None, {
             'fields': ('book', 'name', 'slug', 'icon', 'description', 'display_order'),
         }),
+        ('PDF Page Range', {
+            'fields': ('start_page', 'end_page'),
+            'description': 'Define which pages in the book PDF belong to this specialty. '
+                           'Topic pages must fall within this range.',
+        }),
+        ('CORE Certification', {
+            'fields': ('is_core_specialty', 'core_display_order'),
+            'classes': ('collapse',),
+            'description': 'Enable if this specialty appears in the CORE certification module.',
+        }),
     )
 
     inlines = [TopicInline]
@@ -134,9 +161,21 @@ class SpecialtyAdmin(ModelAdmin):
     def display_header(self, obj):
         return obj.name, obj.book.title, None
 
+    @display(description='Pages')
+    def page_range_display(self, obj):
+        if obj.start_page and obj.end_page:
+            return f"pp. {obj.start_page}–{obj.end_page} ({obj.page_count}pp)"
+        return "—"
+
     @display(description='Topics')
     def topic_count_display(self, obj):
         return obj.topic_count
+
+    @display(description='CORE')
+    def core_badge(self, obj):
+        if obj.is_core_specialty:
+            return f"✓ Badge #{obj.core_display_order}"
+        return "—"
 
 
 # ─────────────────────────────────────────────
@@ -147,11 +186,13 @@ class SpecialtyAdmin(ModelAdmin):
 class TopicAdmin(ModelAdmin):
     """
     Admin for managing Topics — the main content pages.
-    Uses CKEditor for rich HTML content editing.
+    Now primarily configured with PDF page ranges.
+    CKEditor content is kept for backward compatibility but deprecated.
     """
 
     list_display = (
-        'display_header', 'board_basics_badge', 'display_order', 'updated_at',
+        'display_header', 'page_range_display', 'board_basics_badge',
+        'display_order', 'updated_at',
     )
     list_display_links = ('display_header',)
     list_filter = (
@@ -169,24 +210,35 @@ class TopicAdmin(ModelAdmin):
         ('Location', {
             'fields': ('specialty', 'title', 'slug', 'display_order'),
         }),
-        ('Content', {
-            'fields': ('content',),
-            'classes': ('wide',),
-            'description': 'Use the rich text editor below to add the full topic content. '
-                           'Supports headings, bold, images, tables, and clinical photos.',
+        ('PDF Page Range', {
+            'fields': ('start_page', 'end_page'),
+            'description': 'Define which pages in the book PDF belong to this topic. '
+                           'Must fall within the parent specialty page range.',
         }),
         ('Key Points', {
             'fields': ('key_points',),
             'description': 'Enter key points as a JSON list: ["Point 1", "Point 2", ...]',
         }),
         ('Settings', {
-            'fields': ('is_board_basics',),
+            'fields': ('is_board_basics', 'estimated_tasks'),
+        }),
+        ('Legacy Content (Deprecated)', {
+            'fields': ('content',),
+            'classes': ('collapse',),
+            'description': 'This field is deprecated. Content is now delivered via PDF page ranges above. '
+                           'Kept for backward compatibility during migration.',
         }),
     )
 
     @display(header=True, description='Topic', ordering='title')
     def display_header(self, obj):
         return obj.title, f"{obj.specialty.book.title} → {obj.specialty.name}", None
+
+    @display(description='Pages')
+    def page_range_display(self, obj):
+        if obj.start_page and obj.end_page:
+            return f"pp. {obj.start_page}–{obj.end_page} ({obj.page_count}pp)"
+        return "—"
 
     @display(
         description='Board Basics',

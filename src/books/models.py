@@ -1,4 +1,5 @@
 import uuid
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.conf import settings
 from django_ckeditor_5.fields import CKEditor5Field
@@ -31,6 +32,17 @@ class Book(models.Model):
         upload_to='books/covers/', blank=True, null=True,
         help_text='Book cover image (3D render preferred).'
     )
+
+    # ── PDF-based content delivery ──────────────────────────────────
+    pdf_file = models.FileField(
+        upload_to='books/pdfs/', blank=True, null=True,
+        help_text='The full book PDF file. Specialties and topics are mapped to page ranges within this PDF.'
+    )
+    total_pages = models.PositiveIntegerField(
+        default=0,
+        help_text='Total number of pages in the PDF (auto-set or manually entered).'
+    )
+
     price = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     status = models.CharField(
         max_length=15, choices=Status.choices, default=Status.ACTIVE
@@ -65,6 +77,10 @@ class Book(models.Model):
     def topic_count(self):
         return Topic.objects.filter(specialty__book=self).count()
 
+    @property
+    def has_pdf(self):
+        return bool(self.pdf_file)
+
 
 class Specialty(models.Model):
     """
@@ -86,6 +102,16 @@ class Specialty(models.Model):
     )
     description = models.TextField(blank=True, help_text='Brief description of this specialty.')
     display_order = models.PositiveIntegerField(default=0)
+
+    # ── PDF page range mapping ──────────────────────────────────────
+    start_page = models.PositiveIntegerField(
+        default=0,
+        help_text='Starting page number in the book PDF for this specialty (1-indexed).'
+    )
+    end_page = models.PositiveIntegerField(
+        default=0,
+        help_text='Ending page number in the book PDF for this specialty (inclusive).'
+    )
 
     # ── Figma Part 3: CORE module has 11 specialty badges ───────────
     is_core_specialty = models.BooleanField(
@@ -109,6 +135,24 @@ class Specialty(models.Model):
     def __str__(self):
         return f'{self.name} ({self.book.title})'
 
+    def clean(self):
+        super().clean()
+        if self.start_page and self.end_page:
+            if self.start_page > self.end_page:
+                raise ValidationError({
+                    'end_page': 'End page must be greater than or equal to start page.'
+                })
+            if self.book.total_pages and self.end_page > self.book.total_pages:
+                raise ValidationError({
+                    'end_page': f'End page ({self.end_page}) exceeds the book total pages ({self.book.total_pages}).'
+                })
+
+    @property
+    def page_count(self):
+        if self.start_page and self.end_page:
+            return self.end_page - self.start_page + 1
+        return 0
+
     @property
     def topic_count(self):
         return self.topics.count()
@@ -129,8 +173,19 @@ class Topic(models.Model):
     slug = models.SlugField(max_length=500)
     content = CKEditor5Field(
         config_name='default', blank=True,
-        help_text='Rich HTML content — supports headers, images, tables, clinical photos.'
+        help_text='[DEPRECATED — use PDF page ranges instead] Rich HTML content.'
     )
+
+    # ── PDF page range mapping ──────────────────────────────────────
+    start_page = models.PositiveIntegerField(
+        default=0,
+        help_text='Starting page number in the book PDF for this topic (1-indexed).'
+    )
+    end_page = models.PositiveIntegerField(
+        default=0,
+        help_text='Ending page number in the book PDF for this topic (inclusive).'
+    )
+
     key_points = models.JSONField(
         default=list, blank=True,
         help_text='List of key point strings. Example: ["Point 1", "Point 2"]'
@@ -157,12 +212,37 @@ class Topic(models.Model):
         ordering = ['display_order', 'title']
         unique_together = ['specialty', 'slug']
 
+    def clean(self):
+        super().clean()
+        if self.start_page and self.end_page:
+            if self.start_page > self.end_page:
+                raise ValidationError({
+                    'end_page': 'End page must be greater than or equal to start page.'
+                })
+            # Validate topic pages fall within specialty range
+            if self.specialty_id:
+                spec = self.specialty
+                if spec.start_page and spec.end_page:
+                    if self.start_page < spec.start_page or self.end_page > spec.end_page:
+                        raise ValidationError({
+                            'start_page': (
+                                f'Topic page range ({self.start_page}-{self.end_page}) must fall '
+                                f'within specialty range ({spec.start_page}-{spec.end_page}).'
+                            )
+                        })
+
     def __str__(self):
         return self.title
 
     @property
     def book(self):
         return self.specialty.book
+
+    @property
+    def page_count(self):
+        if self.start_page and self.end_page:
+            return self.end_page - self.start_page + 1
+        return 0
 
 
 class UserBookAccess(models.Model):

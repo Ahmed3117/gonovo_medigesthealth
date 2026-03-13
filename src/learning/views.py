@@ -46,6 +46,7 @@ class DashboardView(APIView):
                 'topic_slug': last_reading.topic.slug,
                 'topic_title': last_reading.topic.title,
                 'section': last_reading.last_read_section,
+                'last_page_read': last_reading.last_page_read,
             }
             reading_action['url'] = f'/syllabus/topics/{last_reading.topic.slug}/'
         else:
@@ -112,15 +113,84 @@ class DashboardView(APIView):
             user=user, attempted_at__date=today,
         ).count()
 
+        from flashcards.models import UserFlashcardProgress
+        today_flashcards = UserFlashcardProgress.objects.filter(
+            user=user, last_reviewed_at__date=today,
+        ).count()
+
         goals = {
             'reading': {
-                'target_minutes': 30,
+                'target_minutes': user.daily_reading_goal_minutes,
                 'completed_minutes': round(today_reading_secs / 60),
             },
+            'flashcards': {
+                'target': user.daily_flashcard_goal,
+                'completed': today_flashcards,
+            },
             'questions': {
-                'target': 10,
+                'target': user.daily_questions_goal,
                 'completed': today_questions,
             },
+        }
+
+        # ── Continue Learning ────────────────────────────
+        # Recent in-progress topics
+        continue_qs = UserTopicProgress.objects.filter(
+            user=user, is_completed=False
+        ).select_related('topic__specialty__book').order_by('-updated_at')[:3]
+        
+        continue_learning = []
+        for p in continue_qs:
+            topic = p.topic
+            book = topic.specialty.book if topic.specialty else None
+            percent = 0
+            if topic.end_page and topic.start_page:
+                total_pages = topic.end_page - topic.start_page + 1
+                pages_read = p.last_page_read - topic.start_page + 1 if p.last_page_read else 0
+                if total_pages > 0:
+                    percent = min(round((pages_read / total_pages) * 100), 100)
+            
+            continue_learning.append({
+                'topic_slug': topic.slug,
+                'topic_title': topic.title,
+                'book_title': book.title if book else 'Medigest Health',
+                'progress_percentage': percent,
+                'url': f'/syllabus/topics/{topic.slug}/',
+            })
+
+        # ── Board Basics ─────────────────────────────────
+        # Top 2 owned books with topic counts
+        from books.serializers import MyBookSerializer
+        owned_ids = UserBookAccess.objects.filter(
+            user=user
+        ).values_list('book_id', flat=True)
+        books = Book.objects.filter(id__in=owned_ids)[:2]
+        board_basics = MyBookSerializer(books, many=True, context={'request': request}).data
+
+        # ── CORE Progress Sumary ─────────────────────────
+        from books.models import Specialty
+        from certificates.models import UserCOREProgress
+        from certificates.serializers import COREProgressSerializer
+        
+        core_specialties = Specialty.objects.filter(
+            is_core_specialty=True,
+        ).order_by('core_display_order')
+        
+        badges = []
+        for spec in core_specialties:
+            progress, _ = UserCOREProgress.objects.get_or_create(
+                user=user, specialty=spec,
+            )
+            badges.append(progress)
+            
+        completed = sum(1 for b in badges if b.badge_status == UserCOREProgress.BadgeStatus.COMPLETED)
+        total_badges = len(badges)
+        
+        core_progress = {
+            'completed_badges': completed,
+            'total_badges': total_badges,
+            'badges': COREProgressSerializer(badges[:2], many=True).data,
+            'url': '/core/',
         }
 
         # ── Recent Activity ──────────────────────────────
@@ -138,9 +208,16 @@ class DashboardView(APIView):
         ]
 
         return Response({
+            'user': {
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+            },
             'stats': stats,
+            'continue_learning': continue_learning,
             'quick_actions': [reading_action, quiz_action, flashcard_action],
             'todays_goals': goals,
+            'board_basics': board_basics,
+            'core_progress': core_progress,
             'recent_activity': recent_data,
         })
 

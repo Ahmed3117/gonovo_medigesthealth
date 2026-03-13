@@ -2,12 +2,12 @@
 {% load i18n %}
 
 {% block title %}
-    {% if subtitle %} {{ subtitle }} | {% endif %}
-    {{ title }} | {{ site_title|default:_('MEDIGEST Health') }}
+{% if subtitle %} {{ subtitle }} | {% endif %}
+{{ title }} | {{ site_title|default:_('MEDIGEST Health') }}
 {% endblock %}
 
 {% block branding %}
-    {% include "unfold/helpers/site_branding.html" %}
+{% include "unfold/helpers/site_branding.html" %}
 {% endblock %}
 
 {% block content %}
@@ -15,12 +15,14 @@
     .medigest-dashboard {
         max-width: 100%;
     }
+
     .metrics-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 16px;
         margin-bottom: 28px;
     }
+
     .metric-card {
         background: var(--color-base-50, #f8fafc);
         border: 1px solid var(--color-base-200, #e2e8f0);
@@ -28,17 +30,21 @@
         padding: 20px 22px;
         transition: all 0.2s ease;
     }
+
     .dark .metric-card {
         background: var(--color-base-900, #1a1a2e);
         border-color: var(--color-base-800, #2d2d44);
     }
+
     .metric-card:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
     }
+
     .dark .metric-card:hover {
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
+
     .metric-icon {
         display: inline-flex;
         align-items: center;
@@ -49,12 +55,37 @@
         margin-bottom: 14px;
         font-size: 20px;
     }
-    .metric-icon.teal { background: rgba(20, 184, 166, 0.12); color: #14b8a6; }
-    .metric-icon.blue { background: rgba(59, 130, 246, 0.12); color: #3b82f6; }
-    .metric-icon.amber { background: rgba(245, 158, 11, 0.12); color: #f59e0b; }
-    .metric-icon.rose { background: rgba(244, 63, 94, 0.12); color: #f43f5e; }
-    .metric-icon.violet { background: rgba(139, 92, 246, 0.12); color: #8b5cf6; }
-    .metric-icon.emerald { background: rgba(16, 185, 129, 0.12); color: #10b981; }
+
+    .metric-icon.teal {
+        background: rgba(20, 184, 166, 0.12);
+        color: #14b8a6;
+    }
+
+    .metric-icon.blue {
+        background: rgba(59, 130, 246, 0.12);
+        color: #3b82f6;
+    }
+
+    .metric-icon.amber {
+        background: rgba(245, 158, 11, 0.12);
+        color: #f59e0b;
+    }
+
+    .metric-icon.rose {
+        background: rgba(244, 63, 94, 0.12);
+        color: #f43f5e;
+    }
+
+    .metric-icon.violet {
+        background: rgba(139, 92, 246, 0.12);
+        color: #8b5cf6;
+    }
+
+    .metric-icon.emerald {
+        background: rgba(16, 185, 129, 0.12);
+        color: #10b981;
+    }
+
     .metric-value {
         font-size: 28px;
         font-weight: 700;
@@ -62,23 +93,28 @@
         margin-bottom: 4px;
         color: var(--color-base-900, #0f172a);
     }
+
     .dark .metric-value {
         color: var(--color-base-100, #f1f5f9);
     }
+
     .metric-label {
         font-size: 13px;
         font-weight: 500;
         color: var(--color-base-500, #64748b);
     }
+
     .metric-sub {
         font-size: 11px;
         margin-top: 6px;
         color: var(--color-base-400, #94a3b8);
     }
+
     .metric-sub .highlight {
         color: #14b8a6;
         font-weight: 600;
     }
+
     .section-title {
         font-size: 15px;
         font-weight: 600;
@@ -88,9 +124,11 @@
         align-items: center;
         gap: 8px;
     }
+
     .dark .section-title {
         color: var(--color-base-300, #cbd5e1);
     }
+
     .section-title .material-symbols-outlined {
         font-size: 18px;
         color: #14b8a6;
@@ -98,6 +136,109 @@
 </style>
 
 <div class="medigest-dashboard">
+
+    <!-- ── Import Demo Data Banner ── -->
+    <style>
+        .demo-import-banner {
+            background: linear-gradient(135deg, oklch(30% .08 260) 0%, oklch(22% .06 240) 100%);
+            border: 1px solid oklch(45% .12 260 / 0.4);
+            border-radius: 12px;
+            padding: 18px 24px;
+            margin-bottom: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .demo-import-banner .banner-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .demo-import-banner .banner-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: rgba(20, 184, 166, .18);
+            color: #14b8a6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .demo-import-banner .banner-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #e2e8f0;
+            margin-bottom: 2px;
+        }
+
+        .demo-import-banner .banner-sub {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .demo-import-banner .banner-sub code {
+            background: rgba(255, 255, 255, .08);
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #7dd3fc;
+        }
+
+        .btn-import-demo {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #14b8a6, #0ea5e9);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s ease;
+            white-space: nowrap;
+        }
+
+        .btn-import-demo:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(14, 165, 233, .35);
+            background: linear-gradient(135deg, #0d9488, #0284c7);
+        }
+
+        .btn-import-demo:active {
+            transform: translateY(0);
+        }
+    </style>
+
+    <div class="demo-import-banner">
+        <div class="banner-left">
+            <div class="banner-icon">
+                <span class="material-symbols-outlined">cloud_download</span>
+            </div>
+            <div>
+                <div class="banner-title">🧪 Frontend Testing — Demo Data</div>
+                <div class="banner-sub">
+                    Creates books, topics, questions, flashcards &amp; a student account.
+                    Login: <code>student@medigest.com</code> / <code>Student123!</code>
+                </div>
+            </div>
+        </div>
+        <form method="post" action="/admin/import-demo-data/" style="margin:0">
+            {% csrf_token %}
+            <button type="submit" class="btn-import-demo"
+                onclick="return confirm('Import demo data? Existing records are preserved.')">
+                <span class="material-symbols-outlined" style="font-size:18px">file_download</span>
+                Import Demo Data
+            </button>
+        </form>
+    </div>
     <!-- Users & Access -->
     <div class="section-title">
         <span class="material-symbols-outlined">group</span>

@@ -29,7 +29,12 @@ class FlashcardAdmin(ModelAdmin):
             'description': 'Enter the front (question) and back (answer) content for this flashcard.',
         }),
         ('Classification', {
-            'fields': ('specialty', 'topic'),
+            'fields': ('book', 'specialty', 'topic', 'display_order'),
+        }),
+        ('Cross-Module Link', {
+            'fields': ('related_topic',),
+            'classes': ('collapse',),
+            'description': 'The topic linked via "Related Text →" on the answer side of the flashcard.',
         }),
         ('Settings', {
             'fields': ('is_active',),

@@ -5,9 +5,14 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
+from core.admin_views import ImportDemoDataView, UploadFigmaDataView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    # ── Admin utility views ──────────────────────────────
+    path('admin/import-demo-data/', ImportDemoDataView.as_view(), name='admin_import_demo_data'),
+    path('upload-test-data/', UploadFigmaDataView.as_view(), name='upload_test_data'),
 
     # CKEditor 5 file uploads
     path('ckeditor5/', include('django_ckeditor_5.urls')),

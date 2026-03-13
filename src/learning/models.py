@@ -23,7 +23,12 @@ class UserTopicProgress(models.Model):
     )
     last_read_section = models.CharField(
         max_length=255, blank=True,
-        help_text='ID/anchor of the last section the user was reading.'
+        help_text='[DEPRECATED] ID/anchor of the last section the user was reading.'
+    )
+    # ── PDF page tracking ────────────────────────────────────────────
+    last_page_read = models.PositiveIntegerField(
+        default=0,
+        help_text='Last PDF page number the user was reading within the topic range.'
     )
     reading_time_seconds = models.PositiveIntegerField(
         default=0, help_text='Total cumulative reading time.'
@@ -71,11 +76,18 @@ class UserHighlight(models.Model):
         'books.Topic', on_delete=models.CASCADE, related_name='highlights'
     )
     highlighted_text = models.TextField(help_text='The selected text.')
+    # ── PDF page reference ───────────────────────────────────────────
+    page_number = models.PositiveIntegerField(
+        default=0,
+        help_text='PDF page number where this highlight is located.'
+    )
     start_offset = models.PositiveIntegerField(
-        help_text='Character offset of highlight start.'
+        default=0,
+        help_text='Character offset of highlight start within the page.'
     )
     end_offset = models.PositiveIntegerField(
-        help_text='Character offset of highlight end.'
+        default=0,
+        help_text='Character offset of highlight end within the page.'
     )
     color = models.CharField(
         max_length=10, choices=Color.choices, default=Color.YELLOW
@@ -112,8 +124,13 @@ class UserNote(models.Model):
         help_text='Optional: link to a highlight this note is attached to.'
     )
     content = models.TextField(help_text='The note text.')
+    # ── PDF page reference ───────────────────────────────────────────
+    page_number = models.PositiveIntegerField(
+        default=0,
+        help_text='PDF page number where this note is placed.'
+    )
     position_offset = models.PositiveIntegerField(
-        default=0, help_text='Character offset where this note is placed.'
+        default=0, help_text='Character offset where this note is placed (within the page).'
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -143,9 +160,14 @@ class UserBookmark(models.Model):
     topic = models.ForeignKey(
         'books.Topic', on_delete=models.CASCADE, related_name='bookmarks'
     )
+    # ── PDF page reference ───────────────────────────────────────────
+    page_number = models.PositiveIntegerField(
+        default=0,
+        help_text='PDF page number being bookmarked.'
+    )
     section_anchor = models.CharField(
         max_length=255, blank=True,
-        help_text='Section/anchor ID within the topic content.'
+        help_text='[DEPRECATED] Section/anchor ID within the topic content.'
     )
     label = models.CharField(
         max_length=500, blank=True,

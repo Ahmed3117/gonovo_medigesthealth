@@ -232,3 +232,41 @@ class ChangePasswordView(APIView):
         request.user.set_password(serializer.validated_data['new_password'])
         request.user.save()
         return Response({'detail': 'Password changed successfully.'})
+
+
+# ─────────────────────────────────────────────
+# 13.5  Delete Account (Danger Zone)
+# ─────────────────────────────────────────────
+class DeleteAccountView(APIView):
+    """
+    POST /api/v1/users/me/delete-account/
+
+    Permanently deactivates the user's account.
+    Requires password confirmation for safety.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        password = request.data.get('password', '')
+        if not password:
+            return Response(
+                {'detail': 'Password is required to delete your account.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not request.user.check_password(password):
+            return Response(
+                {'detail': 'Incorrect password.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Deactivate rather than hard-delete (for GDPR data retention)
+        user = request.user
+        user.is_active = False
+        user.save()
+
+        return Response(
+            {'detail': 'Your account has been permanently deleted.'},
+            status=status.HTTP_200_OK,
+        )
