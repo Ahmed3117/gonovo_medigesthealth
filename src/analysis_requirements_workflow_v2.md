@@ -675,7 +675,6 @@ The existing `Book`, `Specialty`, and `Topic` models need updates:
 | key_points | JSONField | List of strings |
 | display_order | PositiveIntegerField | |
 | is_board_basics | BooleanField | Appears in Board Basics |
-| estimated_tasks | PositiveIntegerField | For Learning Plan |
 | created_at / updated_at | DateTimeField | Auto |
 
 #### UserBookAccess
@@ -884,7 +883,7 @@ The existing `Book`, `Specialty`, and `Topic` models need updates:
 |-------|------|-------|
 | id | UUID | PK |
 | user | OneToOne → User | |
-| daily_reading_goal_minutes | PositiveIntegerField | Default 60 |
+| daily_topics_goal | PositiveIntegerField | Default 60 |
 | daily_flashcard_goal | PositiveIntegerField | Default 60 |
 | daily_questions_goal | PositiveIntegerField | Default 20 |
 | font_size | CharField | small/medium/large |

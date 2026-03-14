@@ -340,7 +340,7 @@ Accept: application/json
 
 > **📌 Key design notes:**
 > - `stats.overall_progress.detail` shows **pages** (e.g., "100 / 300 pages") when books have PDF page data. Falls back to "X / Y topics" if no page data exists.
-> - `todays_goals` targets are read from the user's **Settings > Preferences** (`daily_reading_goal_minutes`, `daily_flashcard_goal`, `daily_questions_goal`).
+> - `todays_goals` targets are read from the user's **Settings > Preferences** (`daily_topics_goal`, `daily_flashcard_goal`, `daily_questions_goal`).
 > - `quick_actions[].resume.last_page_read` tells the frontend which PDF page to open when resuming reading.
 
 ---
@@ -756,7 +756,6 @@ Streams the book PDF through an authenticated endpoint. The raw PDF file URL is 
     "last_page_read": 15,
     "reading_time_seconds": 1472,
     "tasks_completed": 1,
-    "estimated_tasks": 3
   },
   "test_your_knowledge": {
     "total_questions": 5,
@@ -809,7 +808,6 @@ Streams the book PDF through an authenticated endpoint. The raw PDF file URL is 
   "last_page_read": 15,
   "reading_time_seconds": 1772,
   "tasks_completed": 1,
-  "estimated_tasks": 3
 }
 ```
 
@@ -1610,7 +1608,7 @@ Streams the book PDF through an authenticated endpoint. The raw PDF file URL is 
   "push_notifications": true,
   "weekly_reports": true,
   "study_reminders": true,
-  "daily_reading_goal_minutes": 60,
+  "daily_topics_goal": 60,
   "daily_flashcard_goal": 60,
   "daily_questions_goal": 20,
   "current_study_streak": 7,
@@ -1644,7 +1642,7 @@ Streams the book PDF through an authenticated endpoint. The raw PDF file URL is 
   "push_notifications": false,
   "weekly_reports": true,
   "study_reminders": false,
-  "daily_reading_goal_minutes": 45,
+  "daily_topics_goal": 45,
   "daily_flashcard_goal": 30,
   "daily_questions_goal": 15
 }
@@ -1652,7 +1650,7 @@ Streams the book PDF through an authenticated endpoint. The raw PDF file URL is 
 
 > **Figma mapping:**
 > - **Profile tab**: `first_name`, `last_name`, `profile_picture`, notification toggles
-> - **Preferences tab**: `daily_reading_goal_minutes`, `daily_flashcard_goal`, `daily_questions_goal`, `font_size`, `theme`
+> - **Preferences tab**: `daily_topics_goal`, `daily_flashcard_goal`, `daily_questions_goal`, `font_size`, `theme`
 
 **Success Response (200 OK):** Returns the full updated user profile object.
 

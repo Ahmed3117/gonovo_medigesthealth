@@ -50,14 +50,12 @@ BOOKS = [
                     {
                         "title": "Evaluation of Lipid Levels",
                         "board_basics": True,
-                        "estimated_tasks": 3,
                         "content": "<h2>Evaluation of Lipid Levels</h2><p>A standard lipid panel measures <strong>total cholesterol, LDL cholesterol, HDL cholesterol, and triglycerides</strong>.</p><h3>Screening Recommendations</h3><ul><li>Diabetes mellitus</li><li>Hypertension</li><li>Smoking</li><li>Family history of premature CVD</li></ul><h3>Interpreting Results</h3><p>Optimal LDL cholesterol is &lt;100 mg/dL, with a target of &lt;70 mg/dL for very high-risk patients.</p>",
                         "key_points": ["Screening for dyslipidemia should begin at age 20 in those with CV risk factors.", "LDL cholesterol is the primary target for lipid-lowering therapy.", "A fasting lipid panel is preferred for accurate triglyceride measurement."],
                     },
                     {
                         "title": "Management of Dyslipidemias",
                         "board_basics": True,
-                        "estimated_tasks": 4,
                         "content": "<h2>Management of Dyslipidemias</h2><p>Statin therapy is the cornerstone of treatment for elevated LDL cholesterol.</p><h3>Statin Intensities</h3><table><thead><tr><th>Intensity</th><th>LDL Reduction</th><th>Examples</th></tr></thead><tbody><tr><td>High</td><td>&ge;50%</td><td>Atorvastatin 40-80 mg</td></tr><tr><td>Moderate</td><td>30-49%</td><td>Atorvastatin 10-20 mg</td></tr></tbody></table><h3>Non-Statin Therapies</h3><p>Ezetimibe and PCSK9 inhibitors for statin-intolerant patients.</p>",
                         "key_points": ["High-intensity statin therapy reduces LDL by ≥50%.", "PCSK9 inhibitors are reserved for very high-risk patients.", "Lifestyle modifications are first-line for all patients."],
                     },
@@ -71,14 +69,12 @@ BOOKS = [
                     {
                         "title": "Heart Failure Classification",
                         "board_basics": True,
-                        "estimated_tasks": 3,
                         "content": "<h2>Heart Failure Classification</h2><p>Heart failure is classified by <strong>LVEF</strong>:</p><ul><li><strong>HFrEF:</strong> LVEF &le;40%</li><li><strong>HFmrEF:</strong> LVEF 41-49%</li><li><strong>HFpEF:</strong> LVEF &ge;50%</li></ul><h3>Diagnostic Evaluation</h3><p>BNP &gt;100 pg/mL or NT-proBNP &gt;300 pg/mL suggests heart failure.</p>",
                         "key_points": ["HFrEF is defined as LVEF ≤40%.", "BNP >100 pg/mL suggests heart failure.", "Echocardiography is the primary imaging modality."],
                     },
                     {
                         "title": "Medical Therapy for HFrEF",
                         "board_basics": False,
-                        "estimated_tasks": 4,
                         "content": "<h2>Guideline-Directed Medical Therapy</h2><p>The four pillars of HFrEF treatment:</p><ol><li><strong>ARNI</strong> (sacubitril-valsartan)</li><li><strong>Beta-blocker</strong></li><li><strong>MRA</strong> (spironolactone)</li><li><strong>SGLT2 inhibitor</strong> (dapagliflozin)</li></ol>",
                         "key_points": ["Four pillars: ARNI, beta-blocker, MRA, SGLT2i.", "Sacubitril-valsartan is preferred over ACEi/ARB.", "SGLT2 inhibitors reduce HF hospitalizations regardless of diabetes."],
                     },
@@ -92,7 +88,6 @@ BOOKS = [
                     {
                         "title": "Atrial Fibrillation",
                         "board_basics": True,
-                        "estimated_tasks": 3,
                         "content": "<h2>Atrial Fibrillation</h2><p>AF is the most common sustained cardiac arrhythmia. Management focuses on rate control, rhythm control, and stroke prevention.</p><h3>Stroke Risk — CHA₂DS₂-VASc</h3><p>Anticoagulation recommended for scores &ge;2 (men) and &ge;3 (women).</p>",
                         "key_points": ["CHA₂DS₂-VASc guides anticoagulation.", "DOACs preferred over warfarin for non-valvular AF.", "Rate control target: resting HR <110 bpm (lenient strategy)."],
                     },
@@ -117,14 +112,12 @@ BOOKS = [
                     {
                         "title": "Asthma",
                         "board_basics": True,
-                        "estimated_tasks": 4,
                         "content": "<h2>Asthma</h2><p>Chronic inflammatory airways disease with variable airflow obstruction.</p><h3>Stepwise Therapy</h3><ul><li><strong>Step 1:</strong> Low-dose ICS-formoterol as needed</li><li><strong>Step 2:</strong> Low-dose ICS daily + SABA as needed</li><li><strong>Step 3:</strong> Low-dose ICS-LABA</li><li><strong>Step 5:</strong> High-dose ICS-LABA + biologic</li></ul>",
                         "key_points": ["ICS-formoterol as needed preferred for mild asthma.", "Stepping up based on symptom frequency.", "Biologics target specific pathways in severe asthma."],
                     },
                     {
                         "title": "COPD",
                         "board_basics": True,
-                        "estimated_tasks": 4,
                         "content": "<h2>COPD</h2><p>Persistent airflow limitation: post-bronchodilator <strong>FEV₁/FVC &lt;0.70</strong>.</p><h3>GOLD Groups</h3><ul><li><strong>Group A:</strong> Low risk, few symptoms — bronchodilator PRN</li><li><strong>Group B:</strong> Low risk, more symptoms — LABA or LAMA</li><li><strong>Group E:</strong> High exacerbation risk — LABA+LAMA ± ICS</li></ul>",
                         "key_points": ["Diagnosis: post-bronchodilator FEV₁/FVC <0.70.", "Smoking cessation is the only intervention proven to slow FEV₁ decline.", "Triple therapy for frequent exacerbators with eosinophilia."],
                     },
@@ -138,14 +131,12 @@ BOOKS = [
                     {
                         "title": "Sepsis and Septic Shock",
                         "board_basics": True,
-                        "estimated_tasks": 5,
                         "content": "<h2>Sepsis</h2><p>Life-threatening organ dysfunction from dysregulated host response to infection.</p><h3>Hour-1 Bundle</h3><ol><li>Measure lactate</li><li>Blood cultures before antibiotics</li><li>Broad-spectrum antibiotics</li><li>30 mL/kg IV crystalloid</li><li>Vasopressors for MAP &lt;65</li></ol>",
                         "key_points": ["Sepsis: suspected infection + SOFA ≥2.", "Norepinephrine is first-line vasopressor.", "Hour-1 Bundle should start immediately."],
                     },
                     {
                         "title": "Mechanical Ventilation",
                         "board_basics": False,
-                        "estimated_tasks": 3,
                         "content": "<h2>Mechanical Ventilation</h2><p>Lung-protective ventilation for ARDS:</p><ul><li><strong>Tidal volume:</strong> 6 mL/kg PBW</li><li><strong>Plateau pressure:</strong> &le;30 cmH₂O</li><li><strong>PEEP:</strong> Titrated to oxygenation</li></ul>",
                         "key_points": ["TV: 6 mL/kg predicted body weight.", "Keep plateau pressure ≤30 cmH₂O.", "Prone positioning improves survival in P/F <150."],
                     },
@@ -170,7 +161,6 @@ BOOKS = [
                     {
                         "title": "AKI Classification and Diagnosis",
                         "board_basics": True,
-                        "estimated_tasks": 3,
                         "content": "<h2>Acute Kidney Injury</h2><p>KDIGO criteria: sCr increase &ge;0.3 mg/dL in 48h, or &ge;1.5× baseline in 7 days, or UO &lt;0.5 mL/kg/h for 6h.</p><ul><li><strong>Pre-renal:</strong> Volume depletion, HF</li><li><strong>Intrinsic:</strong> ATN, AIN, GN</li><li><strong>Post-renal:</strong> Obstruction</li></ul>",
                         "key_points": ["AKI: ≥0.3 mg/dL sCr rise in 48h or ≥1.5× in 7 days.", "FENa <1% = pre-renal; FENa >2% = intrinsic.", "Muddy brown casts = ATN."],
                     },
@@ -184,7 +174,6 @@ BOOKS = [
                     {
                         "title": "CKD Staging and Management",
                         "board_basics": True,
-                        "estimated_tasks": 4,
                         "content": "<h2>Chronic Kidney Disease</h2><p>Staged by GFR and albuminuria.</p><h3>Key Interventions</h3><ul><li><strong>ACEi/ARB</strong> for proteinuria</li><li><strong>SGLT2i</strong> to slow progression</li><li><strong>BP target</strong> &lt;130/80 mmHg</li><li><strong>Finerenone</strong> for diabetic CKD</li></ul>",
                         "key_points": ["SGLT2 inhibitors slow CKD progression regardless of diabetes.", "ACEi/ARB first-line for proteinuric CKD.", "Refer to nephrology when GFR <30."],
                     },
@@ -209,7 +198,6 @@ BOOKS = [
                     {
                         "title": "CAP Diagnosis and Treatment",
                         "board_basics": True,
-                        "estimated_tasks": 3,
                         "content": "<h2>Community-Acquired Pneumonia</h2><p>CURB-65 guides site-of-care: 0-1 outpatient, 2 consider admission, &ge;3 ICU.</p><h3>Empiric Antibiotics</h3><ul><li><strong>Outpatient:</strong> Amoxicillin or doxycycline</li><li><strong>Inpatient:</strong> Beta-lactam + macrolide, or respiratory FQ</li></ul>",
                         "key_points": ["CURB-65 guides disposition.", "Procalcitonin helps distinguish bacterial vs viral.", "Blood cultures for all hospitalized CAP patients."],
                     },
@@ -234,7 +222,6 @@ BOOKS = [
                     {
                         "title": "Approach to Anemia",
                         "board_basics": True,
-                        "estimated_tasks": 3,
                         "content": "<h2>Approach to Anemia</h2><p>Classified by MCV:</p><ul><li><strong>Microcytic (MCV &lt;80):</strong> Fe deficiency, thalassemia</li><li><strong>Normocytic (80-100):</strong> CKD, chronic disease</li><li><strong>Macrocytic (&gt;100):</strong> B12/folate deficiency</li></ul><h3>Iron Deficiency</h3><p>Ferritin &lt;30 ng/mL is diagnostic.</p>",
                         "key_points": ["Ferritin <30 ng/mL diagnoses iron deficiency.", "Reticulocyte count distinguishes production vs destruction.", "Iron deficiency in men/postmenopausal women → GI evaluation."],
                     },
@@ -542,7 +529,6 @@ class Command(BaseCommand):
                             "key_points": td.get("key_points", []),
                             "display_order": k,
                             "is_board_basics": td.get("board_basics", False),
-                            "estimated_tasks": td.get("estimated_tasks", 3),
                         }
                     )
                     self.stdout.write(f"      📖 {td['title']}")

@@ -38,30 +38,18 @@ def _build_stats(user):
     ).values_list('book_id', flat=True)
 
     owned_books = Book.objects.filter(id__in=owned_book_ids)
-    total_pages = sum(b.total_pages for b in owned_books)
-
-    # Pages read = sum of page ranges of completed topics
     completed_progress = UserTopicProgress.objects.filter(
         user=user, topic__specialty__book_id__in=owned_book_ids,
         is_completed=True,
-    ).select_related('topic')
-    pages_read = sum(
-        (p.topic.end_page - p.topic.start_page + 1)
-        for p in completed_progress
-        if p.topic.end_page and p.topic.start_page
     )
+    completed_topics = completed_progress.count()
 
-    if total_pages > 0:
-        progress_pct = min(round((pages_read / total_pages) * 100), 100)
-        detail = f'{pages_read} / {total_pages} pages'
-    else:
-        # Fallback to topic-based if no page data yet
-        total_topics = Topic.objects.filter(
-            specialty__book_id__in=owned_book_ids
-        ).count()
-        completed_topics = completed_progress.count()
-        progress_pct = round((completed_topics / total_topics) * 100) if total_topics else 0
-        detail = f'{completed_topics} / {total_topics} topics'
+    total_topics = Topic.objects.filter(
+        specialty__book_id__in=owned_book_ids
+    ).count()
+
+    progress_pct = round((completed_topics / total_topics) * 100) if total_topics else 0
+    detail = f'{completed_topics} / {total_topics} topics'
 
     # Quiz average: last 10 quiz sessions
     recent_sessions = QuizSession.objects.filter(
@@ -416,19 +404,8 @@ class TopicProgressUpdateView(APIView):
         data = serializer.validated_data
         if 'is_completed' in data:
             progress.is_completed = data['is_completed']
-        if 'last_read_section' in data:
-            progress.last_read_section = data['last_read_section']
-        if 'last_page_read' in data:
-            progress.last_page_read = data['last_page_read']
-        if 'reading_time_seconds' in data:
-            progress.reading_time_seconds += data['reading_time_seconds']
         progress.save()
 
         return Response({
             'is_completed': progress.is_completed,
-            'last_read_section': progress.last_read_section,
-            'last_page_read': progress.last_page_read,
-            'reading_time_seconds': progress.reading_time_seconds,
-            'tasks_completed': progress.tasks_completed,
-            'estimated_tasks': topic.estimated_tasks,
         })

@@ -103,10 +103,9 @@ class DashboardView(APIView):
 
         # ── Today's Goals ────────────────────────────────
         today = timezone.now().date()
-        today_reading_secs = UserStudySession.objects.filter(
-            user=user, started_at__date=today,
-            session_type=UserStudySession.SessionType.READING,
-        ).aggregate(t=Sum('duration_seconds'))['t'] or 0
+        today_topics_completed = UserTopicProgress.objects.filter(
+            user=user, updated_at__date=today, is_completed=True
+        ).count()
 
         from questions.models import UserQuestionAttempt
         today_questions = UserQuestionAttempt.objects.filter(
@@ -120,8 +119,8 @@ class DashboardView(APIView):
 
         goals = {
             'reading': {
-                'target_minutes': user.daily_reading_goal_minutes,
-                'completed_minutes': round(today_reading_secs / 60),
+                'target': user.daily_topics_goal,
+                'completed': today_topics_completed,
             },
             'flashcards': {
                 'target': user.daily_flashcard_goal,
@@ -144,11 +143,6 @@ class DashboardView(APIView):
             topic = p.topic
             book = topic.specialty.book if topic.specialty else None
             percent = 0
-            if topic.end_page and topic.start_page:
-                total_pages = topic.end_page - topic.start_page + 1
-                pages_read = p.last_page_read - topic.start_page + 1 if p.last_page_read else 0
-                if total_pages > 0:
-                    percent = min(round((pages_read / total_pages) * 100), 100)
             
             continue_learning.append({
                 'topic_slug': topic.slug,

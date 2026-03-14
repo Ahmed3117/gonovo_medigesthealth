@@ -12,8 +12,6 @@ class LearningPlanTopicSerializer(serializers.ModelSerializer):
     )
     questions_completed = serializers.SerializerMethodField()
     questions_total = serializers.SerializerMethodField()
-    tasks_completed = serializers.SerializerMethodField()
-    tasks_total = serializers.SerializerMethodField()
     has_started = serializers.SerializerMethodField()
 
     class Meta:
@@ -21,7 +19,6 @@ class LearningPlanTopicSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'topic', 'topic_title', 'specialty_name',
             'questions_completed', 'questions_total',
-            'tasks_completed', 'tasks_total',
             'has_started', 'added_at',
         ]
         read_only_fields = ['id', 'added_at']
@@ -38,16 +35,6 @@ class LearningPlanTopicSerializer(serializers.ModelSerializer):
         return Question.objects.filter(
             topic=obj.topic, is_active=True,
         ).count()
-
-    def get_tasks_completed(self, obj):
-        from learning.models import UserTopicProgress
-        p = UserTopicProgress.objects.filter(
-            user=obj.user, topic=obj.topic,
-        ).first()
-        return p.tasks_completed if p else 0
-
-    def get_tasks_total(self, obj):
-        return obj.topic.estimated_tasks
 
     def get_has_started(self, obj):
         from learning.models import UserTopicProgress

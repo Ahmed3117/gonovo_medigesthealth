@@ -29,8 +29,7 @@ class TopicInline(StackedInline):
     fields = (
         'title', 'slug', 'display_order',
         'start_page', 'end_page',
-        'is_board_basics', 'estimated_tasks',
-        'key_points', 'content',
+        'key_points',
     )
     prepopulated_fields = {'slug': ('title',)}
     ordering = ('display_order',)
@@ -220,7 +219,7 @@ class TopicAdmin(ModelAdmin):
             'description': 'Enter key points as a JSON list: ["Point 1", "Point 2", ...]',
         }),
         ('Settings', {
-            'fields': ('is_board_basics', 'estimated_tasks'),
+            'fields': ('is_board_basics',),
         }),
     )
 

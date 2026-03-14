@@ -21,25 +21,6 @@ class UserTopicProgress(models.Model):
         default=False,
         help_text='User marked this topic as completed.'
     )
-    last_read_section = models.CharField(
-        max_length=255, blank=True,
-        help_text='[DEPRECATED] ID/anchor of the last section the user was reading.'
-    )
-    # ── PDF page tracking ────────────────────────────────────────────
-    last_page_read = models.PositiveIntegerField(
-        default=0,
-        help_text='Last PDF page number the user was reading within the topic range.'
-    )
-    reading_time_seconds = models.PositiveIntegerField(
-        default=0, help_text='Total cumulative reading time.'
-    )
-
-    # ── Figma Part 3: Learning Plan shows "0/3 tasks completed" ─────
-    tasks_completed = models.PositiveIntegerField(
-        default=0,
-        help_text='Number of tasks completed for this topic (for Learning Plan progress).'
-    )
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

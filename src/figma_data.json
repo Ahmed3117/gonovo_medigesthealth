@@ -7,7 +7,7 @@
     "role": "student",
     "current_study_streak": 7,
     "longest_study_streak": 14,
-    "daily_reading_goal_minutes": 60,
+    "daily_topics_goal": 5,
     "daily_flashcard_goal": 60,
     "daily_questions_goal": 20,
     "theme": "light",

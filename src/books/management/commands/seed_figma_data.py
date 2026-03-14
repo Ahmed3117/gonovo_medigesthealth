@@ -64,7 +64,7 @@ class Command(BaseCommand):
                 "font_size": d["font_size"],
                 "current_study_streak": d["current_study_streak"],
                 "longest_study_streak": d["longest_study_streak"],
-                "daily_reading_goal_minutes": d["daily_reading_goal_minutes"],
+                "daily_topics_goal": d.get("daily_topics_goal", 5),
                 "daily_flashcard_goal": d["daily_flashcard_goal"],
                 "daily_questions_goal": d["daily_questions_goal"],
                 "last_study_date": timezone.now().date() - timedelta(days=1),
@@ -121,7 +121,6 @@ class Command(BaseCommand):
                             "is_board_basics": td.get("board_basics", False),
                             "start_page": td.get("start_page", 1),
                             "end_page": td.get("end_page", 10),
-                            "estimated_tasks": 3,
                         }
                     )
                     self.stdout.write(f"      📖 {td['title']}")

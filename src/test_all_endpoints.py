@@ -149,7 +149,6 @@ topic, _ = Topic.objects.get_or_create(
     defaults={
         'title': 'Heart Failure',
         'display_order': 1,
-        'estimated_tasks': 3,
     }
 )
 topic2, _ = Topic.objects.get_or_create(
@@ -158,7 +157,6 @@ topic2, _ = Topic.objects.get_or_create(
     defaults={
         'title': 'Atrial Fibrillation',
         'display_order': 2,
-        'estimated_tasks': 2,
         'is_board_basics': True,
     }
 )

@@ -91,9 +91,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
 
     # ── Learning Preferences (Settings > Preferences tab) ────────────
-    daily_reading_goal_minutes = models.PositiveIntegerField(
-        default=60,
-        help_text='Daily reading time goal in minutes (default: 60).'
+    daily_topics_goal = models.PositiveIntegerField(
+        default=5,
+        help_text='Daily reading topics goal (default: 5).'
     )
     daily_flashcard_goal = models.PositiveIntegerField(
         default=60,

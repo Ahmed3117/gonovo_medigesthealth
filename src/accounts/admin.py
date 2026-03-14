@@ -53,7 +53,7 @@ class UserAdmin(BaseUserAdmin, ModelAdmin):
         }),
         ('Learning Goals', {
             'fields': (
-                'daily_reading_goal_minutes', 'daily_flashcard_goal',
+                'daily_topics_goal', 'daily_flashcard_goal',
                 'daily_questions_goal',
             ),
             'classes': ('collapse',),

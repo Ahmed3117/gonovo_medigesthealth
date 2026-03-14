@@ -51,7 +51,6 @@ class UserTopicProgressAdmin(ModelAdmin):
 
     @display(description='Tasks')
     def tasks_display(self, obj):
-        total = obj.topic.estimated_tasks
         if total == 0:
             return '—'
         return f'{obj.tasks_completed}/{total}'

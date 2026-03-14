@@ -192,12 +192,7 @@ class Topic(models.Model):
         help_text='If checked, this topic also appears in the Board Basics section.'
     )
 
-    # ── Figma Part 3: Learning Plan shows "0/3 tasks completed" ─────
-    # Tasks are sub-items within a topic (reading, quiz, flashcard review, etc.)
-    estimated_tasks = models.PositiveIntegerField(
-        default=0,
-        help_text='Number of tasks associated with this topic (for Learning Plan progress display).'
-    )
+
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -20,7 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
             'email_notifications', 'push_notifications',
             'weekly_reports', 'study_reminders',
             # Learning goals
-            'daily_reading_goal_minutes', 'daily_flashcard_goal',
+            'daily_topics_goal', 'daily_flashcard_goal',
             'daily_questions_goal',
             # Gamification
             'current_study_streak', 'longest_study_streak',
@@ -117,7 +117,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             'email_notifications', 'push_notifications',
             'weekly_reports', 'study_reminders',
             # Learning goals
-            'daily_reading_goal_minutes', 'daily_flashcard_goal',
+            'daily_topics_goal', 'daily_flashcard_goal',
             'daily_questions_goal',
         ]
 

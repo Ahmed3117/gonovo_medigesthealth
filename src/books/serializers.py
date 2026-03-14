@@ -42,7 +42,6 @@ class TopicMiniSerializer(serializers.ModelSerializer):
             return 0
         if p.is_completed:
             return 100
-        est = obj.estimated_tasks
         if est > 0:
             return round((p.tasks_completed / est) * 100)
         return 0
@@ -277,7 +276,6 @@ class TopicDetailSerializer(serializers.ModelSerializer):
             'last_page_read': p.last_page_read if p else 0,
             'reading_time_seconds': p.reading_time_seconds if p else 0,
             'tasks_completed': p.tasks_completed if p else 0,
-            'estimated_tasks': obj.estimated_tasks,
         }
 
     def get_test_your_knowledge(self, obj):
@@ -322,6 +320,3 @@ class TopicDetailSerializer(serializers.ModelSerializer):
 # ─────────────────────────────────────────────
 class TopicProgressUpdateSerializer(serializers.Serializer):
     is_completed = serializers.BooleanField(required=False)
-    last_read_section = serializers.CharField(required=False, allow_blank=True)
-    last_page_read = serializers.IntegerField(required=False, min_value=0)
-    reading_time_seconds = serializers.IntegerField(required=False, min_value=0)
