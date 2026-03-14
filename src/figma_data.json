@@ -31,7 +31,6 @@
             {
               "title": "Topic Name - Lesson Name",
               "board_basics": true,
-              "content": "<h2>Lesson Name</h2><p>This is the content for the lesson.</p>",
               "start_page": 1,
               "end_page": 100
             }

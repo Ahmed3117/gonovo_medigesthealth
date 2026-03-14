@@ -117,7 +117,6 @@ class Command(BaseCommand):
                         slug=slugify(td["title"]) + "-" + str(spec.id),
                         defaults={
                             "title": td["title"],
-                            "content": td["content"],
                             "display_order": k,
                             "is_board_basics": td.get("board_basics", False),
                             "start_page": td.get("start_page", 1),

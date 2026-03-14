@@ -345,7 +345,6 @@ class Command(BaseCommand):
                         specialty=specialty, slug=slugify(topic_data["title"]),
                         defaults={
                             "title": topic_data["title"],
-                            "content": topic_data["content"],
                             "key_points": topic_data.get("key_points", []),
                             "display_order": k,
                             "is_board_basics": random.choice([True, False]),

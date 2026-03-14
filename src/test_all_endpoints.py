@@ -149,7 +149,6 @@ topic, _ = Topic.objects.get_or_create(
     defaults={
         'title': 'Heart Failure',
         'display_order': 1,
-        'content': '<h2>Heart Failure Overview</h2><p>Heart failure is a clinical syndrome...</p>',
         'estimated_tasks': 3,
     }
 )
@@ -159,7 +158,6 @@ topic2, _ = Topic.objects.get_or_create(
     defaults={
         'title': 'Atrial Fibrillation',
         'display_order': 2,
-        'content': '<h2>AFib Management</h2><p>Atrial fibrillation is the most common...</p>',
         'estimated_tasks': 2,
         'is_board_basics': True,
     }

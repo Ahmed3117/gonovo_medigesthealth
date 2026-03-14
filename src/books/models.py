@@ -171,10 +171,6 @@ class Topic(models.Model):
     )
     title = models.CharField(max_length=500)
     slug = models.SlugField(max_length=500)
-    content = CKEditor5Field(
-        config_name='default', blank=True,
-        help_text='[DEPRECATED — use PDF page ranges instead] Rich HTML content.'
-    )
 
     # ── PDF page range mapping ──────────────────────────────────────
     start_page = models.PositiveIntegerField(

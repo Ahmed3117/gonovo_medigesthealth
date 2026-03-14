@@ -539,7 +539,6 @@ class Command(BaseCommand):
                         slug=slugify(td["title"]),
                         defaults={
                             "title": td["title"],
-                            "content": td["content"],
                             "key_points": td.get("key_points", []),
                             "display_order": k,
                             "is_board_basics": td.get("board_basics", False),

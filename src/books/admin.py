@@ -222,12 +222,6 @@ class TopicAdmin(ModelAdmin):
         ('Settings', {
             'fields': ('is_board_basics', 'estimated_tasks'),
         }),
-        ('Legacy Content (Deprecated)', {
-            'fields': ('content',),
-            'classes': ('collapse',),
-            'description': 'This field is deprecated. Content is now delivered via PDF page ranges above. '
-                           'Kept for backward compatibility during migration.',
-        }),
     )
 
     @display(header=True, description='Topic', ordering='title')

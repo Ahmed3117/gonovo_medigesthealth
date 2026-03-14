@@ -235,7 +235,7 @@ class TopicDetailSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'slug', 'specialty', 'book',
             'start_page', 'end_page',
-            'content', 'key_points', 'is_completed', 'is_bookmarked',
+            'key_points', 'is_completed', 'is_bookmarked',
             'progress', 'test_your_knowledge', 'pagination',
         ]
 
