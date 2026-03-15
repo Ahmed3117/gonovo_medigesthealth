@@ -312,9 +312,9 @@ Accept: application/json
     }
   ],
   "todays_goals": {
-    "reading": {
-      "target_minutes": 60,
-      "completed_minutes": 25
+    "topics": {
+      "target": 5,
+      "completed": 2
     },
     "flashcards": {
       "target": 60,
@@ -429,6 +429,8 @@ Accept: application/json
   "slug": "cardiovascular-medicine",
   "cover_image": "https://…/covers/cv.jpg",
   "has_pdf": true,
+  "pdf_url": "https://…/books/pdfs/cv.pdf",
+  "has_access": true,
   "total_pages": 300,
   "estimated_pages": 300,
   "specialties": [
@@ -751,12 +753,7 @@ Streams the book PDF through an authenticated endpoint. The raw PDF file URL is 
   "key_points": ["Point 1", "Point 2"],
   "is_completed": false,
   "is_bookmarked": true,
-  "progress": {
-    "last_read_section": "introduction",
-    "last_page_read": 15,
-    "reading_time_seconds": 1472,
-    "tasks_completed": 1,
-  },
+  "progress": {},
   "test_your_knowledge": {
     "total_questions": 5,
     "answered_questions": 2
@@ -791,23 +788,14 @@ Streams the book PDF through an authenticated endpoint. The raw PDF file URL is 
 **Request Body (all fields optional):**
 ```json
 {
-  "is_completed": false,
-  "last_read_section": "management",
-  "last_page_read": 15,
-  "reading_time_seconds": 300
+  "is_completed": true
 }
 ```
-
-> **Note:** `reading_time_seconds` is **additive** — the value sent is added to the existing total.
 
 **Success Response (200 OK):**
 ```json
 {
-  "is_completed": false,
-  "last_read_section": "management",
-  "last_page_read": 15,
-  "reading_time_seconds": 1772,
-  "tasks_completed": 1,
+  "is_completed": true
 }
 ```
 
@@ -1581,7 +1569,48 @@ Streams the book PDF through an authenticated endpoint. The raw PDF file URL is 
 
 ---
 
-## 13. User Profile & Preferences Endpoints
+## 13. Help Center Endpoints
+
+### 13.1 Get Help Center FAQ & Contacts
+
+| Detail | Value |
+|--------|-------|
+| **Method** | `GET` |
+| **URL** | `/api/v1/help/` |
+| **Auth Required** | ✅ Yes |
+
+**Success Response (200 OK):**
+```json
+{
+  "faq_categories": [
+    {
+      "id": "uuid",
+      "name": "Account & Access",
+      "faqs": [
+        {
+          "id": "uuid",
+          "question": "How do I reset my password?",
+          "answer": "You can reset your password..."
+        }
+      ]
+    }
+  ],
+  "contact_methods": [
+    {
+      "id": "uuid",
+      "title": "support@medigest.com",
+      "subtitle": "Email Support",
+      "icon_type": "email",
+      "action_text": "Get help from our support team ->",
+      "action_url": "mailto:support@medigest.com"
+    }
+  ]
+}
+```
+
+---
+
+## 14. User Profile & Preferences Endpoints
 
 > **Figma Screens:** 35-37 (Settings — Profile, Security, Preferences tabs)
 
@@ -1805,6 +1834,7 @@ X-Webhook-Signature: <HMAC-SHA256 hex digest>
 |------|---------|---------|
 | 2026-03-01 | 1.0 | Initial draft — 33 Figma screens covered |
 | 2026-03-11 | 2.0 | **Major update:** PDF-based book architecture (start_page/end_page on specialties & topics), new user preference fields (push_notifications, weekly_reports, study_reminders, daily goals), page_number on bookmarks/highlights/notes, last_page_read tracking, dashboard goals read from user preferences + flashcard goal added, pages-based overall progress, OTP-based password reset, webhook endpoint documented, certificates endpoint documented |
+| 2026-03-15 | 2.1 | **Minor update:** Replaced reading goals with daily topics goal, updated dashboard response to return topics instead of reading minues, removed deprecated reading fields, added Help Center APIs, added `pdf_url` and `has_access` to Book Detail, and added an Appendix for Enums/Choices. |
 
 ---
 
@@ -1866,6 +1896,40 @@ X-Webhook-Signature: <HMAC-SHA256 hex digest>
 | 52 | Profile | POST | `/users/me/change-password/` | 36 |
 | 53 | Profile | POST | `/users/me/delete-account/` | 36 |
 | 54 | Profile | POST | `/users/me/study-sessions/` | — |
-| 55 | Webhook | POST | `/webhooks/purchase/` | — |
+| 55 | Help | GET | `/help/` | — |
+| 56 | Webhook | POST | `/webhooks/purchase/` | — |
 
-**Total: 55 endpoints**
+**Total: 56 endpoints**
+
+---
+
+## 16. Appendix: Enums & Choices
+
+### User Profile Preferences
+- **role**: `"student"`, `"admin"`, `"doctor"`
+- **theme**: `"light"`, `"dark"`, `"system"`
+- **font_size**: `"small"`, `"medium"`, `"large"`
+
+### Books & Book Access
+- **Book status**: `"active"`, `"coming_soon"`, `"archived"`
+
+### Support & Help Center
+- **ContactMethod icon_type**: `"email"`, `"phone"`, `"link"`, `"chat"`
+
+### Question Bank
+- **Difficulty**: `"easy"`, `"medium"`, `"hard"`
+- **CareType tag**: `"ambulatory"`, `"inpatient"`, `"emergency"`, `"icu"`
+- **PatientDemographic tag**: `"adult"`, `"elderly"`, `"young_adult"`, `"pregnant"`, `"pediatric"`
+- **Custom Quiz Mode**: `"practice"`, `"exam"`, `"lka"`, `"retry"`
+
+### Certificates & CME
+- **CertificateType**: `"core"`, `"cme"`, `"exam"`
+- **CME AccreditationBody**: `"ama"`, `"abim_moc"`, `"canada_rc"`, `"qatar_qchp"`, `"australia_racp"`
+- **CORE BadgeStatus**: `"pending"`, `"in_progress"`, `"completed"`
+
+### Flashcards
+- **Review Confidence**: `0` (Not Reviewed), `1` (Viewed), `2` (Somewhat Confident), `3` (Confident), `4` (Very Confident)
+
+### Learning & Annotations
+- **Highlight Color**: `"yellow"`, `"green"`, `"blue"`, `"pink"`, `"orange"`
+- **Study SessionType**: `"reading"`, `"quiz"`, `"flashcard"`, `"board_basics"`, `"core"`
