@@ -677,7 +677,7 @@ class Command(BaseCommand):
     def _create_student_activity(self, student):
         from books.models import Topic, Specialty
         from questions.models import Question, QuizSession, UserQuestionAttempt
-        from flashcards.models import Flashcard, UserFlashcardProgress, UserCustomFlashcard
+        from flashcards.models import Flashcard, UserFlashcardProgress
         from learning.models import (
             UserTopicProgress, UserHighlight, UserNote, UserBookmark,
             UserLearningPlanTopic, UserStudySession, RecentActivity

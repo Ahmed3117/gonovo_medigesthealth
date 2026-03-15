@@ -3,7 +3,7 @@ from django.contrib import admin
 from unfold.admin import ModelAdmin
 from unfold.decorators import display
 
-from .models import Flashcard, UserFlashcardProgress, UserCustomFlashcard
+from .models import Flashcard, UserFlashcardProgress
 
 
 @admin.register(Flashcard)
@@ -104,27 +104,4 @@ class UserFlashcardProgressAdmin(ModelAdmin):
         return obj.confidence, label
 
 
-@admin.register(UserCustomFlashcard)
-class UserCustomFlashcardAdmin(ModelAdmin):
-    """Read-only admin for viewing user-created flashcards."""
 
-    list_display = ('user_email', 'front_preview', 'topic_name', 'created_at')
-    list_filter = ('created_at',)
-    search_fields = ('user__email', 'front_text', 'back_text')
-    list_per_page = 25
-    ordering = ('-created_at',)
-
-    def has_add_permission(self, request):
-        return False
-
-    @display(description='User')
-    def user_email(self, obj):
-        return obj.user.email
-
-    @display(description='Front')
-    def front_preview(self, obj):
-        return obj.front_text[:80] + '...' if len(obj.front_text) > 80 else obj.front_text
-
-    @display(description='Topic')
-    def topic_name(self, obj):
-        return obj.topic.title if obj.topic else '—'

@@ -106,32 +106,3 @@ class UserFlashcardProgress(models.Model):
         return f'{self.user.email} — {self.get_confidence_display()}'
 
 
-class UserCustomFlashcard(models.Model):
-    """
-    Custom flashcard created by a user (e.g., from the Syllabus reader).
-    Users can create their own flashcards while reading topics.
-    """
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
-        related_name='custom_flashcards'
-    )
-    topic = models.ForeignKey(
-        'books.Topic', on_delete=models.SET_NULL, null=True, blank=True,
-        related_name='custom_flashcards',
-        help_text='Topic this flashcard was created from.'
-    )
-    front_text = models.TextField(help_text='The question/prompt side.')
-    back_text = models.TextField(help_text='The answer/explanation side.')
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = 'User Custom Flashcard'
-        verbose_name_plural = 'User Custom Flashcards'
-        ordering = ['-created_at']
-
-    def __str__(self):
-        return f'{self.user.email}: {self.front_text[:60]}'
