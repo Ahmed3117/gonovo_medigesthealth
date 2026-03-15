@@ -367,7 +367,6 @@ UNFOLD = {
             "models": [
                 "flashcards.flashcard",
                 "flashcards.userflashcardprogress",
-                "flashcards.usercustomflashcard",
             ],
             "items": [
                 {
@@ -377,10 +376,6 @@ UNFOLD = {
                 {
                     "title": _("Progress"),
                     "link": reverse_lazy("admin:flashcards_userflashcardprogress_changelist"),
-                },
-                {
-                    "title": _("Custom Cards"),
-                    "link": reverse_lazy("admin:flashcards_usercustomflashcard_changelist"),
                 },
             ],
         },

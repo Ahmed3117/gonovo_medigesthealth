@@ -140,14 +140,31 @@ class StoreBookSerializer(serializers.ModelSerializer):
 class BookDetailSerializer(serializers.ModelSerializer):
     specialties = SpecialtySerializer(many=True, read_only=True)
     progress_percentage = serializers.SerializerMethodField()
+    has_access = serializers.SerializerMethodField()
+    pdf_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Book
         fields = [
             'id', 'title', 'slug', 'cover_image', 'has_pdf',
+            'pdf_url', 'has_access',
             'total_pages', 'estimated_pages',
             'progress_percentage', 'specialties',
         ]
+
+    def get_has_access(self, obj):
+        user = self.context['request'].user
+        from books.models import UserBookAccess
+        return UserBookAccess.objects.filter(user=user, book=obj).exists()
+
+    def get_pdf_url(self, obj):
+        has_access = self.get_has_access(obj)
+        if has_access and obj.has_pdf and obj.pdfPath:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.pdfPath.url)
+            return obj.pdfPath.url
+        return None
 
     def get_progress_percentage(self, obj):
         user = self.context['request'].user
