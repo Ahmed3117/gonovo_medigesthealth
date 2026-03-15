@@ -116,7 +116,7 @@ class DashboardView(APIView):
         ).count()
 
         goals = {
-            'reading': {
+            'topics': {
                 'target': user.daily_topics_goal,
                 'completed': today_topics_completed,
             },
