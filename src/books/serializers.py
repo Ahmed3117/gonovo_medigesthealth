@@ -159,11 +159,11 @@ class BookDetailSerializer(serializers.ModelSerializer):
 
     def get_pdf_url(self, obj):
         has_access = self.get_has_access(obj)
-        if has_access and obj.has_pdf and obj.pdfPath:
+        if has_access and obj.has_pdf and obj.pdf_file:
             request = self.context.get('request')
             if request:
-                return request.build_absolute_uri(obj.pdfPath.url)
-            return obj.pdfPath.url
+                return request.build_absolute_uri(obj.pdf_file.url)
+            return obj.pdf_file.url
         return None
 
     def get_progress_percentage(self, obj):
