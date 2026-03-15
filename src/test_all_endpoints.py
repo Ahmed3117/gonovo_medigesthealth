@@ -72,6 +72,7 @@ from certificates.models import (
     UserCOREProgress, Certificate,
 )
 from webhooks.models import WebhookLog
+from support.models import FAQCategory, FAQ, ContactMethod
 
 # Create test user
 test_email = 'apitest@medigest.com'
@@ -239,6 +240,32 @@ cme_credit, _ = UserCMECredit.objects.get_or_create(
     }
 )
 print(f"  CME Activity & Credit created")
+
+# Create Support Help Center Data
+faq_cat, _ = FAQCategory.objects.get_or_create(
+    name='Account & Access',
+    display_order=1
+)
+FAQ.objects.get_or_create(
+    category=faq_cat,
+    question='How do I reset my password?',
+    defaults={
+        'answer': 'You can reset your password from the login page or profile settings.',
+        'display_order': 1,
+        'is_published': True
+    }
+)
+ContactMethod.objects.get_or_create(
+    title='support@medigest.com',
+    defaults={
+        'subtitle': 'Email Support',
+        'icon_type': ContactMethod.IconType.EMAIL,
+        'action_text': 'Get help from our support team ->',
+        'action_url': 'mailto:support@medigest.com',
+        'display_order': 1
+    }
+)
+print(f"  Help Center data created")
 
 # Create a recent activity
 RecentActivity.objects.get_or_create(
@@ -715,7 +742,20 @@ else:
     print(f"    → Webhook user NOT created")
 
 # ═══════════════════════════════════════════════════════
-# TEST 13: LOGOUT
+# TEST 13: HELP CENTER
+# ═══════════════════════════════════════════════════════
+print("\n" + "="*60)
+print("  13. HELP CENTER")
+print("="*60)
+
+resp = client.get('/api/v1/help/', **AUTH)
+if test("Help Center", resp):
+    data = resp.json()
+    print(f"    → FAQ Categories: {len(data.get('faq_categories', []))}")
+    print(f"    → Contact Methods: {len(data.get('contact_methods', []))}")
+
+# ═══════════════════════════════════════════════════════
+# TEST 14: LOGOUT
 # ═══════════════════════════════════════════════════════
 print("\n" + "="*60)
 print("  13. LOGOUT")

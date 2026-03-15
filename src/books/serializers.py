@@ -40,11 +40,7 @@ class TopicMiniSerializer(serializers.ModelSerializer):
         p = self._get_progress(obj)
         if not p:
             return 0
-        if p.is_completed:
-            return 100
-        if est > 0:
-            return round((p.tasks_completed / est) * 100)
-        return 0
+        return 100 if p.is_completed else 0
 
 
 class SpecialtySerializer(serializers.ModelSerializer):
@@ -270,13 +266,7 @@ class TopicDetailSerializer(serializers.ModelSerializer):
         return UserBookmark.objects.filter(user=user, topic=obj).exists()
 
     def get_progress(self, obj):
-        p = self._user_progress(obj)
-        return {
-            'last_read_section': p.last_read_section if p else '',
-            'last_page_read': p.last_page_read if p else 0,
-            'reading_time_seconds': p.reading_time_seconds if p else 0,
-            'tasks_completed': p.tasks_completed if p else 0,
-        }
+        return {}
 
     def get_test_your_knowledge(self, obj):
         from questions.models import Question, UserQuestionAttempt

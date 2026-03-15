@@ -25,6 +25,7 @@ urlpatterns = [
     path('api/v1/', include('learning.urls')),
     path('api/v1/', include('certificates.urls')),
     path('api/v1/', include('webhooks.urls')),
+    path('api/v1/help/', include('support.urls')),
 ]
 
 # Serve media files in development

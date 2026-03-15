@@ -45,8 +45,6 @@ class DashboardView(APIView):
             reading_action['resume'] = {
                 'topic_slug': last_reading.topic.slug,
                 'topic_title': last_reading.topic.title,
-                'section': last_reading.last_read_section,
-                'last_page_read': last_reading.last_page_read,
             }
             reading_action['url'] = f'/syllabus/topics/{last_reading.topic.slug}/'
         else:

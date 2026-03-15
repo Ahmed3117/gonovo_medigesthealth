@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'learning',
     'certificates',
     'webhooks',
+    'support',
 ]
 
 # Allow iframes for Unfold
@@ -227,11 +228,6 @@ UNFOLD = {
                         "icon": "trending_up",
                         "link": reverse_lazy("admin:flashcards_userflashcardprogress_changelist"),
                     },
-                    {
-                        "title": _("Custom Flashcards"),
-                        "icon": "edit_note",
-                        "link": reverse_lazy("admin:flashcards_usercustomflashcard_changelist"),
-                    },
                 ],
             },
             {
@@ -280,6 +276,28 @@ UNFOLD = {
                         "title": _("Certificates"),
                         "icon": "card_membership",
                         "link": reverse_lazy("admin:certificates_certificate_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Support"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("FAQ Categories"),
+                        "icon": "category",
+                        "link": reverse_lazy("admin:support_faqcategory_changelist"),
+                    },
+                    {
+                        "title": _("FAQs"),
+                        "icon": "live_help",
+                        "link": reverse_lazy("admin:support_faq_changelist"),
+                    },
+                    {
+                        "title": _("Contact Methods"),
+                        "icon": "contact_support",
+                        "link": reverse_lazy("admin:support_contactmethod_changelist"),
                     },
                 ],
             },
